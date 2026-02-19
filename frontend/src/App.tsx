@@ -9,7 +9,7 @@ import Settings from './pages/Settings';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminUsers from './pages/AdminUsers';
 import AdminUserDetails from './pages/AdminUserDetails';
-import AdminAnalytics from './pages/AdminAnalytics';
+// import AdminAnalytics from './pages/AdminAnalytics';
 import AdminSettings from './pages/AdminSettings';
 import Layout from './components/Layout';
 
@@ -63,7 +63,7 @@ function App() {
             <Route path="admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
             <Route path="admin/users/:id" element={<AdminRoute><AdminUserDetails /></AdminRoute>} />
-            <Route path="admin/analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
+            {/* <Route path="admin/analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} /> */}
             <Route path="admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
           </Route>
         </Routes>
