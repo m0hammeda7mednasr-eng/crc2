@@ -15,7 +15,7 @@ const AdminSettings = () => {
     maintenanceMode: false,
   });
 
-  const [, setSaved] = useState(false);
+  // const [, setSaved] = useState(false);
 
   // const handleSave = () => {
   //   // TODO: Implement save functionality
