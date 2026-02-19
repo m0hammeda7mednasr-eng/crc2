@@ -6,11 +6,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// For production, use PostgreSQL by setting DATABASE_URL to postgresql connection string
+// Supports both SQLite (development) and PostgreSQL (production)
+// Set DATABASE_URL to switch between databases
 
 model User {
   id                    String     @id @default(uuid())
