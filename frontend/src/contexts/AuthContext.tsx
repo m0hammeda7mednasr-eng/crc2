@@ -34,7 +34,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setUser(JSON.parse(storedUser));
           socketService.connect(storedToken);
         })
-        .catch((error) => {
+        .catch(() => {
           // Token is invalid, clear it
           console.log('Token expired or invalid, clearing...');
           localStorage.removeItem('token');

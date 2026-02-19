@@ -2,7 +2,7 @@ import { useState } from 'react';
 import AdminLayout from '../components/AdminLayout';
 
 const AdminSettings = () => {
-  const [settings, setSettings] = useState({
+  const [settings] = useState({
     siteName: 'WhatsApp CRM',
     supportEmail: 'support@crm.com',
     maxUsersPerPlan: {
@@ -15,13 +15,13 @@ const AdminSettings = () => {
     maintenanceMode: false,
   });
 
-  const [saved, setSaved] = useState(false);
+  const [, setSaved] = useState(false);
 
-  const handleSave = () => {
-    // TODO: Implement save functionality
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
-  };
+  // const handleSave = () => {
+  //   // TODO: Implement save functionality
+  //   setSaved(true);
+  //   setTimeout(() => setSaved(false), 3000);
+  // };
 
   return (
     <AdminLayout>
