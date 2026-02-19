@@ -1,0 +1,188 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// For production, use PostgreSQL by setting DATABASE_URL to postgresql connection string
+
+model User {
+  id                    String     @id @default(uuid())
+  email                 String     @unique
+  username              String?    @unique
+  passwordHash          String
+  role                  String     @default("user") // user, admin
+  shopifyDomain         String?
+  shopifyClientId       String?    // Shopify API Key (Client ID)
+  shopifyClientSecret   String?    // Encrypted - Shopify API Secret Key
+  shopifyAccessToken    String?    // Encrypted - OAuth Access Token
+  shopifyWebhookId      String?
+  n8nWebhookUrl         String?
+  n8nWebhookSecret      String?    // Encrypted
+  subscriptionId        String?
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+  
+  customers             Customer[]
+  orders                Order[]
+  auditLogs             AuditLog[]
+  oauthStates           OAuthState[]
+  webhookLogs           WebhookLog[]
+  subscription          Subscription? @relation(fields: [subscriptionId], references: [id])
+  
+  @@map("users")
+  @@index([email])
+  @@index([role])
+  @@index([subscriptionId])
+}
+
+model Subscription {
+  id              String    @id @default(uuid())
+  planName        String    // free, pro, enterprise
+  status          String    @default("active") // active, cancelled, expired
+  startDate       DateTime  @default(now())
+  endDate         DateTime?
+  price           Float     @default(0)
+  billingCycle    String    @default("monthly") // monthly, yearly
+  
+  // Usage limits
+  maxCustomers    Int       @default(10)
+  maxMessages     Int       @default(100)
+  maxOrders       Int       @default(50)
+  
+  // Current usage
+  usedCustomers   Int       @default(0)
+  usedMessages    Int       @default(0)
+  usedOrders      Int       @default(0)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  users           User[]
+  
+  @@map("subscriptions")
+  @@index([planName])
+  @@index([status])
+}
+
+model Customer {
+  id          String    @id @default(uuid())
+  phoneNumber String
+  name        String?
+  userId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages    Message[]
+  orders      Order[]
+  
+  @@unique([phoneNumber, userId])
+  @@index([userId])
+  @@index([phoneNumber])
+  @@map("customers")
+}
+
+model Message {
+  id          String   @id @default(uuid())
+  content     String
+  type        String   @default("text") // text, image, button
+  direction   String   // incoming, outgoing
+  imageUrl    String?
+  customerId  String
+  createdAt   DateTime @default(now())
+  
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  @@index([customerId])
+  @@index([createdAt])
+  @@index([customerId, createdAt])
+  @@map("messages")
+}
+
+model Order {
+  id              String   @id @default(uuid())
+  shopifyOrderId  String?  @unique
+  orderNumber     String
+  customerName    String
+  customerPhone   String
+  total           Float
+  status          String   @default("pending") // pending, confirmed, cancelled
+  items           String?  // JSON string for SQLite compatibility
+  userId          String
+  customerId      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customer        Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([customerId])
+  @@index([status])
+  @@index([userId, status])
+  @@map("orders")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String
+  action      String   // email_update, username_update, password_update, etc.
+  ipAddress   String?
+  metadata    String?  // JSON string for SQLite compatibility
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, createdAt])
+  @@map("audit_logs")
+}
+
+model OAuthState {
+  id          String   @id @default(uuid())
+  userId      String
+  state       String   @unique
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([state])
+  @@index([expiresAt])
+  @@map("oauth_states")
+}
+
+model WebhookLog {
+  id              String   @id @default(uuid())
+  userId          String
+  direction       String   // incoming, outgoing
+  eventType       String
+  status          String   // success, failure
+  correlationId   String
+  payload         String?  // JSON string for SQLite compatibility
+  error           String?
+  createdAt       DateTime @default(now())
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, createdAt])
+  @@index([correlationId])
+  @@map("webhook_logs")
+}
+
+model ProcessedWebhook {
+  id              String   @id @default(uuid())
+  idempotencyKey  String   @unique
+  userId          String
+  source          String   // shopify, n8n
+  processedAt     DateTime @default(now())
+  
+  @@index([idempotencyKey])
+  @@map("processed_webhooks")
+}

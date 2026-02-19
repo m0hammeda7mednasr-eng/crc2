@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String     @id @default(uuid())
+  email             String     @unique
+  password          String
+  shopifyDomain     String?
+  shopifyApiKey     String?
+  n8nWebhookUrl     String?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  
+  customers         Customer[]
+  orders            Order[]
+  
+  @@map("users")
+}
+
+model Customer {
+  id          String    @id @default(uuid())
+  phoneNumber String
+  name        String?
+  userId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages    Message[]
+  orders      Order[]
+  
+  @@unique([phoneNumber, userId])
+  @@map("customers")
+}
+
+model Message {
+  id          String   @id @default(uuid())
+  content     String
+  type        String   @default("text") // text, image, button
+  direction   String   // in, out
+  imageUrl    String?
+  customerId  String
+  createdAt   DateTime @default(now())
+  
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  @@map("messages")
+}
+
+model Order {
+  id            String   @id @default(uuid())
+  shopifyId     String?
+  orderNumber   String
+  customerName  String
+  customerPhone String
+  total         Float
+  status        String   @default("pending") // pending, confirmed, cancelled
+  items         Json?
+  userId        String
+  customerId    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  
+  @@map("orders")
+}

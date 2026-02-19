@@ -1,0 +1,67 @@
+{
+  "name": "WhatsApp Messages to CRM",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-incoming",
+        "options": {}
+      },
+      "name": "WhatsApp Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "whatsapp-incoming"
+    },
+    {
+      "parameters": {
+        "functionCode": "const data = $input.item.json;\nlet phoneNumber = '';\nlet content = '';\nlet type = 'text';\nlet customerName = '';\n\n// Evolution API format\nif (data.key && data.key.remoteJid) {\n  phoneNumber = data.key.remoteJid.replace('@s.whatsapp.net', '');\n  \n  // استخراج المحتوى\n  if (data.message?.conversation) {\n    content = data.message.conversation;\n  } else if (data.message?.extendedTextMessage) {\n    content = data.message.extendedTextMessage.text;\n  } else if (data.message?.buttonsResponseMessage) {\n    content = data.message.buttonsResponseMessage.selectedButtonId;\n    type = 'button';\n  } else if (data.message?.imageMessage) {\n    content = data.message.imageMessage.caption || 'صورة';\n    type = 'image';\n  }\n  \n  // استخراج اسم العميل\n  customerName = data.pushName || '';\n}\n\n// WhatsApp Business API format\nif (data.from) {\n  phoneNumber = data.from;\n  content = data.body || data.text?.body || '';\n  customerName = data.name || '';\n  \n  if (data.type === 'button') {\n    type = 'button';\n    content = data.button?.payload || content;\n  }\n}\n\n// WhatsApp Cloud API format\nif (data.entry?.[0]?.changes?.[0]?.value?.messages?.[0]) {\n  const message = data.entry[0].changes[0].value.messages[0];\n  phoneNumber = message.from;\n  \n  if (message.type === 'text') {\n    content = message.text.body;\n  } else if (message.type === 'button') {\n    content = message.button.payload;\n    type = 'button';\n  } else if (message.type === 'interactive') {\n    content = message.interactive.button_reply?.id || message.interactive.list_reply?.id;\n    type = 'button';\n  }\n  \n  // استخراج اسم العميل من contacts\n  if (data.entry[0].changes[0].value.contacts?.[0]) {\n    const contact = data.entry[0].changes[0].value.contacts[0];\n    customerName = contact.profile?.name || '';\n  }\n}\n\nreturn {\n  phoneNumber: phoneNumber,\n  content: content,\n  type: type,\n  customerName: customerName,\n  timestamp: new Date().toISOString(),\n  rawData: JSON.stringify(data)\n};"
+      },
+      "name": "Extract Message Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://localhost:5000/api/webhook/incoming/{{ $env.CRM_USER_ID }}",
+        "options": {
+          "timeout": 10000
+        },
+        "bodyParametersJson": "={\n  \"phoneNumber\": \"{{ $json.phoneNumber }}\",\n  \"content\": \"{{ $json.content }}\",\n  \"type\": \"{{ $json.type }}\",\n  \"customerName\": \"{{ $json.customerName }}\"\n}"
+      },
+      "name": "Send to CRM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 300]
+    }
+  ],
+  "connections": {
+    "WhatsApp Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract Message Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Message Data": {
+      "main": [
+        [
+          {
+            "node": "Send to CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,246 @@
+{
+  "name": "WhatsApp Button Handler",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "button-response",
+        "options": {}
+      },
+      "name": "Button Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "button-response"
+    },
+    {
+      "parameters": {
+        "functionCode": "const data = $input.item.json;\nlet buttonId = '';\nlet phoneNumber = '';\n\n// استخراج button ID\nif (data.message?.buttonsResponseMessage) {\n  buttonId = data.message.buttonsResponseMessage.selectedButtonId;\n  phoneNumber = data.key.remoteJid.replace('@s.whatsapp.net', '');\n} else if (data.button?.payload) {\n  buttonId = data.button.payload;\n  phoneNumber = data.from;\n} else if (data.interactive?.button_reply) {\n  buttonId = data.interactive.button_reply.id;\n  phoneNumber = data.from;\n}\n\n// استخراج Order ID والإجراء\nconst parts = buttonId.split('_');\nconst action = parts[0]; // confirm, cancel, support\nconst orderId = parts[1];\n\nreturn {\n  buttonId: buttonId,\n  action: action,\n  orderId: orderId,\n  phoneNumber: phoneNumber\n};"
+      },
+      "name": "Parse Button Response",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "string": [
+                  {
+                    "value1": "={{ $json.action }}",
+                    "value2": "confirm"
+                  }
+                ]
+              }
+            },
+            {
+              "conditions": {
+                "string": [
+                  {
+                    "value1": "={{ $json.action }}",
+                    "value2": "cancel"
+                  }
+                ]
+              }
+            },
+            {
+              "conditions": {
+                "string": [
+                  {
+                    "value1": "={{ $json.action }}",
+                    "value2": "support"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Switch Action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://{{ $env.SHOPIFY_SHOP }}.myshopify.com/admin/api/2024-01/orders/{{ $json.orderId }}/fulfillments.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {},
+        "bodyParametersJson": "={\n  \"fulfillment\": {\n    \"notify_customer\": true,\n    \"tracking_info\": {\n      \"company\": \"CRM System\",\n      \"number\": \"{{ $json.orderId }}\"\n    }\n  }\n}"
+      },
+      "name": "Fulfill Order",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "3",
+          "name": "Shopify Access Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://{{ $env.SHOPIFY_SHOP }}.myshopify.com/admin/api/2024-01/orders/{{ $json.orderId }}/cancel.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {},
+        "bodyParametersJson": "={\n  \"reason\": \"customer\",\n  \"email\": true,\n  \"refund\": false\n}"
+      },
+      "name": "Cancel Order",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "3",
+          "name": "Shopify Access Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WHATSAPP_API_URL }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {},
+        "bodyParametersJson": "={\n  \"number\": \"{{ $json.phoneNumber }}\",\n  \"text\": \"شكراً لتواصلك معنا! 💬\\n\\nسيتم الرد عليك في أقرب وقت ممكن.\\n\\nفريق الدعم 🙋‍♂️\"\n}"
+      },
+      "name": "Support Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 400],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2",
+          "name": "WhatsApp API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=http://localhost:5000/api/orders/{{ $json.orderId }}/status",
+        "options": {},
+        "bodyParametersJson": "={\n  \"status\": \"{{ $json.action === 'confirm' ? 'confirmed' : 'cancelled' }}\"\n}"
+      },
+      "name": "Update CRM Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1050, 250]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WHATSAPP_API_URL }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {},
+        "bodyParametersJson": "={\n  \"number\": \"{{ $json.phoneNumber }}\",\n  \"text\": \"{{ $json.action === 'confirm' ? 'تم تأكيد طلبك بنجاح! ✅\\n\\nسيتم شحنه قريباً 📦\\n\\nشكراً لثقتك بنا! 🙏' : 'تم إلغاء طلبك ❌\\n\\nنتمنى خدمتك مرة أخرى 🌟' }}\"\n}"
+      },
+      "name": "Send Confirmation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1250, 250],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2",
+          "name": "WhatsApp API Key"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Button Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Button Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Button Response": {
+      "main": [
+        [
+          {
+            "node": "Switch Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Action": {
+      "main": [
+        [
+          {
+            "node": "Fulfill Order",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cancel Order",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Support Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fulfill Order": {
+      "main": [
+        [
+          {
+            "node": "Update CRM Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cancel Order": {
+      "main": [
+        [
+          {
+            "node": "Update CRM Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update CRM Status": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

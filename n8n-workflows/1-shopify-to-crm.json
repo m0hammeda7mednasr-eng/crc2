@@ -1,0 +1,103 @@
+{
+  "name": "Shopify Orders to CRM",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "order",
+        "event": "create"
+      },
+      "name": "Shopify Trigger",
+      "type": "n8n-nodes-base.shopifyTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "shopify-order-created",
+      "credentials": {
+        "shopifyApi": {
+          "id": "1",
+          "name": "Shopify Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// استخراج بيانات الأوردر\nconst order = $input.item.json;\n\n// تنسيق رقم الهاتف\nlet phone = order.customer?.phone || order.shipping_address?.phone || '';\nphone = phone.replace(/[^0-9+]/g, '');\n\n// تنسيق المنتجات\nconst items = order.line_items.map(item => \n  `• ${item.name} (${item.quantity}x) - ${item.price} ${order.currency}`\n).join('\\n');\n\n// تنسيق اسم العميل\nconst firstName = order.customer?.first_name || '';\nconst lastName = order.customer?.last_name || '';\nconst customerName = `${firstName} ${lastName}`.trim() || 'عميل';\n\nreturn {\n  orderId: order.id.toString(),\n  orderNumber: order.order_number.toString(),\n  customerName: customerName,\n  customerPhone: phone,\n  customerEmail: order.customer?.email || '',\n  totalPrice: parseFloat(order.total_price),\n  currency: order.currency,\n  items: items,\n  itemsJson: JSON.stringify(order.line_items),\n  shopifyOrderUrl: `https://${order.shop_url || 'your-store.myshopify.com'}/admin/orders/${order.id}`\n};"
+      },
+      "name": "Format Order Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5000/api/webhook/shopify/orders",
+        "options": {
+          "timeout": 10000
+        },
+        "bodyParametersJson": "={\n  \"orderId\": \"{{ $json.orderId }}\",\n  \"orderNumber\": \"{{ $json.orderNumber }}\",\n  \"customerName\": \"{{ $json.customerName }}\",\n  \"customerPhone\": \"{{ $json.customerPhone }}\",\n  \"total\": {{ $json.totalPrice }},\n  \"status\": \"pending\",\n  \"userId\": \"YOUR_USER_ID_HERE\",\n  \"items\": {{ $json.itemsJson }}\n}"
+      },
+      "name": "Send to CRM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WHATSAPP_API_URL }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {},
+        "bodyParametersJson": "={\n  \"number\": \"{{ $json.customerPhone }}\",\n  \"text\": \"مرحباً {{ $json.customerName }}! 👋\\n\\nتم استلام طلبك رقم #{{ $json.orderNumber }} بنجاح ✅\\n\\n📦 تفاصيل الطلب:\\n{{ $json.items }}\\n\\n💰 الإجمالي: {{ $json.totalPrice }} {{ $json.currency }}\\n\\nهل تريد تأكيد الطلب؟\",\n  \"options\": {\n    \"buttons\": [\n      {\n        \"buttonId\": \"confirm_{{ $json.orderId }}\",\n        \"buttonText\": { \"displayText\": \"تأكيد ✅\" }\n      },\n      {\n        \"buttonId\": \"cancel_{{ $json.orderId }}\",\n        \"buttonText\": { \"displayText\": \"إلغاء ❌\" }\n      },\n      {\n        \"buttonId\": \"support_{{ $json.orderId }}\",\n        \"buttonText\": { \"displayText\": \"تواصل معنا 💬\" }\n      }\n    ]\n  }\n}"
+      },
+      "name": "Send WhatsApp Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2",
+          "name": "WhatsApp API Key"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Shopify Trigger": {
+      "main": [
+        [
+          {
+            "node": "Format Order Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Order Data": {
+      "main": [
+        [
+          {
+            "node": "Send to CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to CRM": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
