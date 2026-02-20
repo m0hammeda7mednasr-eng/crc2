@@ -70,7 +70,7 @@ export class CustomerController {
       const userId = extractAccountId(req);
       const { id } = req.params;
 
-      const customer = await CustomerService.getCustomerById(id, userId);
+      const customer = await CustomerService.getCustomerById(id as string, userId);
 
       if (!customer) {
         return res.status(404).json({

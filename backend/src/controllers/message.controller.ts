@@ -15,7 +15,7 @@ export class MessageController {
       const userId = extractAccountId(req);
       const { customerId } = req.params;
 
-      const messages = await MessageService.getMessagesByCustomer(customerId, userId);
+      const messages = await MessageService.getMessagesByCustomer(customerId as string, userId);
 
       res.status(200).json({ messages });
     } catch (error: any) {

@@ -46,7 +46,7 @@ export class AdminController {
       const { id } = req.params;
 
       const user = await prisma.user.findUnique({
-        where: { id },
+        where: { id: id as string },
         select: {
           id: true,
           email: true,
@@ -152,7 +152,7 @@ export class AdminController {
       const { id } = req.params;
 
       const user = await prisma.user.findUnique({
-        where: { id },
+        where: { id: id as string },
       });
 
       if (!user) {
@@ -173,7 +173,7 @@ export class AdminController {
       }
 
       await prisma.user.delete({
-        where: { id },
+        where: { id: id as string },
       });
 
       res.status(200).json({

@@ -37,7 +37,7 @@ export class OrderController {
       const userId = extractAccountId(req);
       const { id } = req.params;
 
-      const order = await OrderService.getOrderById(id, userId);
+      const order = await OrderService.getOrderById(id as string, userId);
 
       if (!order) {
         return res.status(404).json({
@@ -87,7 +87,7 @@ export class OrderController {
       // Get socket manager
       const socketManager = req.app.get('socketManager');
 
-      const order = await OrderService.updateStatus(id, status, userId, socketManager);
+      const order = await OrderService.updateStatus(id as string, status, userId, socketManager);
 
       res.status(200).json({
         message: 'Order status updated successfully',

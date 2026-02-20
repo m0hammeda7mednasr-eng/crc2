@@ -38,7 +38,7 @@ export class WebhookController {
       const socketManager = req.app.get('socketManager');
 
       // Get userId from URL parameter (preferred) or payload (legacy)
-      let userId = req.params.userId || payload.userId;
+      let userId = (req.params.userId as string) || payload.userId;
 
       // If userId not provided, look up existing customer
       if (!userId) {
