@@ -30,6 +30,14 @@ const socketManager = new SocketManager(httpServer);
 // Make socket manager available to routes
 app.set('socketManager', socketManager);
 
+// CORS Configuration
+const allowedOrigins = [
+  'https://crc2-backend.vercel.app',
+  'https://crc2-backend-1u0p22vec-mohs-projects-0b03337a.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:5173',
+];
+
 // Middleware - Allow all origins temporarily for debugging
 app.use(cors({
   origin: '*',
