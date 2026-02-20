@@ -30,32 +30,9 @@ const socketManager = new SocketManager(httpServer);
 // Make socket manager available to routes
 app.set('socketManager', socketManager);
 
-// Middleware
-const allowedOrigins = [
-  process.env.CLIENT_URL,
-  process.env.FRONTEND_URL,
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'https://crc2-backend.vercel.app'
-].filter(Boolean);
-
+// Middleware - Allow all origins temporarily for debugging
 app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    // Allow all Vercel preview deployments
-    if (origin.includes('.vercel.app')) {
-      return callback(null, true);
-    }
-    
-    if (allowedOrigins.some(allowed => origin.startsWith(allowed as string))) {
-      callback(null, true);
-    } else {
-      console.warn(`CORS blocked origin: ${origin}`);
-      callback(null, true); // Allow anyway in production for now
-    }
-  },
+  origin: '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
