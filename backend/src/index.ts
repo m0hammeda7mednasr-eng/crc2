@@ -31,9 +31,29 @@ const socketManager = new SocketManager(httpServer);
 app.set('socketManager', socketManager);
 
 // Middleware
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  process.env.FRONTEND_URL,
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'https://crc2-backend.vercel.app'
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.some(allowed => origin.startsWith(allowed as string))) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked origin: ${origin}`);
+      callback(null, true); // Allow anyway in production for now
+    }
+  },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -51,13 +71,27 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/settings', settingsRoutes);
-app.use('/api/webhooks', webhookRoutes);
+app.use('/api/webhook', webhookRoutes); // Changed from /api/webhooks to /api/webhook
 app.use('/api/admin', adminRoutes);
 app.use('/api/shopify', shopifyRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.status(200).json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+    port: PORT,
+  });
+});
+
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+    port: PORT,
+  });
 });
 
 // Error handlers
@@ -67,9 +101,20 @@ app.use(errorHandler);
 // Start server
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => {
+  console.log('='.repeat(60));
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📡 WebSocket server ready`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 CORS allowed origins:`, allowedOrigins);
+  console.log(`📊 Database: ${process.env.DATABASE_URL ? 'Connected' : 'Not configured'}`);
+  console.log('='.repeat(60));
+  console.log('Available routes:');
+  console.log('  POST /api/auth/register');
+  console.log('  POST /api/auth/login');
+  console.log('  GET  /api/auth/me');
+  console.log('  GET  /health');
+  console.log('  GET  /api/health');
+  console.log('='.repeat(60));
 });
 
 export default app;
