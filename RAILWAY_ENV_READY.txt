@@ -1,61 +1,0 @@
-========================================
-🚀 Railway Environment Variables
-========================================
-انسخ كل السطور دي والصقها في Railway Variables
-========================================
-
-DATABASE_URL=postgresql://postgres.djsybibajbgatdupufri:01066184859Mm@aws-1-eu-central-1.pooler.supabase.com:5432/postgres
-
-JWT_SECRET=BD-JF9I$16ejXoS*KdcAtyai8WgN_nm4f?h+vMU=&uEzT0xb
-
-JWT_EXPIRES_IN=7d
-
-PORT=5000
-
-NODE_ENV=production
-
-SHOPIFY_SCOPES=read_orders,write_webhooks,read_customers
-
-RATE_LIMIT_WINDOW_MS=900000
-
-RATE_LIMIT_MAX_REQUESTS=100
-
-MAX_FILE_SIZE=5242880
-
-UPLOAD_DIR=./uploads
-
-========================================
-⚠️  محتاج تضيف بعد Deploy على Railway و Vercel:
-========================================
-
-CLIENT_URL=https://[YOUR-VERCEL-APP].vercel.app
-
-FRONTEND_URL=https://[YOUR-VERCEL-APP].vercel.app
-
-SHOPIFY_REDIRECT_URI=https://[YOUR-RAILWAY-APP].up.railway.app/api/shopify/auth/callback
-
-========================================
-📝 الخطوات:
-========================================
-
-1. انسخ كل المتغيرات اللي فوق
-2. افتح Railway Dashboard
-3. Variables tab
-4. الصق المتغيرات
-5. Deploy Backend
-6. احصل على Railway URL
-7. Deploy Frontend على Vercel
-8. احصل على Vercel URL
-9. ارجع لـ Railway وأضف:
-   - CLIENT_URL
-   - FRONTEND_URL
-   - SHOPIFY_REDIRECT_URI
-
-========================================
-✅ Supabase Database جاهز!
-========================================
-- Tables تم إنشاؤها
-- Schema جاهز
-- Connection يعمل
-
-========================================
