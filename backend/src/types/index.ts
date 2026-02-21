@@ -22,8 +22,10 @@ export interface RegisterRequest {
 export interface SendMessageRequest {
   customerId: string;
   content: string;
-  type: 'text' | 'image';
+  type: 'text' | 'image' | 'voice';
   imageUrl?: string;
+  voiceUrl?: string;
+  duration?: number;
 }
 
 export interface UpdateOrderStatusRequest {
@@ -37,8 +39,10 @@ export interface UpdateSettingsRequest {
 export interface IncomingMessagePayload {
   phoneNumber: string;
   content: string;
-  type: 'text' | 'image';
+  type: 'text' | 'image' | 'voice';
   imageUrl?: string;
+  voiceUrl?: string;
+  duration?: number;
   userId: string;
   customerName?: string;
 }

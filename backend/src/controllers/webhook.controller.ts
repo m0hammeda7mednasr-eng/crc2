@@ -107,7 +107,9 @@ export class WebhookController {
         payload.type || 'text',
         'incoming',
         payload.imageUrl,
-        socketManager
+        socketManager,
+        payload.voiceUrl,
+        payload.duration
       );
 
       res.status(200).json({

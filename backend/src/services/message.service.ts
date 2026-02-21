@@ -13,7 +13,9 @@ export class MessageService {
     type: string,
     direction: string,
     imageUrl?: string,
-    socketManager?: SocketManager
+    socketManager?: SocketManager,
+    voiceUrl?: string,
+    duration?: number
   ) {
     const message = await prisma.message.create({
       data: {
@@ -22,6 +24,8 @@ export class MessageService {
         type,
         direction,
         imageUrl,
+        voiceUrl,
+        duration,
       },
       include: {
         customer: true,
@@ -75,7 +79,9 @@ export class MessageService {
     phoneNumber: string,
     content: string,
     type: string,
-    imageUrl?: string
+    imageUrl?: string,
+    voiceUrl?: string,
+    duration?: number
   ) {
     try {
       const payload = {
@@ -83,6 +89,8 @@ export class MessageService {
         content,
         type,
         imageUrl,
+        voiceUrl,
+        duration,
         timestamp: new Date().toISOString(),
       };
 
@@ -133,6 +141,44 @@ export class MessageService {
     }
 
     console.log(`✅ Image validated: ${file.originalname} (${file.mimetype}, ${(file.size / 1024).toFixed(2)}KB)`);
+
+    return true;
+  }
+
+  /**
+   * Handle voice upload
+   */
+  static async handleVoiceUpload(file: Express.Multer.File): Promise<string> {
+    try {
+      // In production, upload to cloud storage (S3, Cloudinary, etc.)
+      // For now, return local path
+      const voiceUrl = `/uploads/${file.filename}`;
+      
+      console.log(`✅ Voice message uploaded successfully: ${voiceUrl}`);
+      
+      return voiceUrl;
+    } catch (error: any) {
+      console.error('Voice upload error:', error);
+      throw new Error(`Failed to handle voice upload: ${error.message}`);
+    }
+  }
+
+  /**
+   * Validate voice file
+   */
+  static validateVoiceFile(file: Express.Multer.File): boolean {
+    const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/ogg', 'audio/wav', 'audio/webm'];
+    const maxSize = 10 * 1024 * 1024; // 10MB
+
+    if (!allowedTypes.includes(file.mimetype)) {
+      throw new Error('Invalid file type. Only MP3, OGG, WAV, and WebM are allowed.');
+    }
+
+    if (file.size > maxSize) {
+      throw new Error('File size exceeds 10MB limit.');
+    }
+
+    console.log(`✅ Voice validated: ${file.originalname} (${file.mimetype}, ${(file.size / 1024).toFixed(2)}KB)`);
 
     return true;
   }

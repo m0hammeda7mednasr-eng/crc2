@@ -42,7 +42,7 @@ export class MessageController {
   static async sendMessage(req: Request, res: Response) {
     try {
       const userId = extractAccountId(req);
-      const { customerId, content, type, imageUrl }: SendMessageRequest = req.body;
+      const { customerId, content, type, imageUrl, voiceUrl, duration }: SendMessageRequest = req.body;
 
       // Validation
       if (!customerId || !content || !type) {
@@ -86,7 +86,9 @@ export class MessageController {
             customer.phoneNumber,
             content,
             type,
-            imageUrl
+            imageUrl,
+            voiceUrl,
+            duration
           );
           n8nSuccess = true;
         } catch (error: any) {
@@ -105,7 +107,9 @@ export class MessageController {
         type,
         'outgoing',
         imageUrl,
-        socketManager
+        socketManager,
+        voiceUrl,
+        duration
       );
 
       res.status(201).json({
@@ -149,6 +153,39 @@ export class MessageController {
     } catch (error: any) {
       res.status(400).json({
         error: error.message || 'Failed to upload image',
+        code: 'UPLOAD_ERROR',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
+   * Upload voice message
+   * POST /api/messages/upload-voice
+   */
+  static async uploadVoice(req: Request, res: Response) {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          error: 'No file uploaded',
+          code: 'VALIDATION_ERROR',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      // Validate voice file
+      MessageService.validateVoiceFile(req.file);
+
+      // Handle upload
+      const voiceUrl = await MessageService.handleVoiceUpload(req.file);
+
+      res.status(200).json({
+        message: 'Voice message uploaded successfully',
+        voiceUrl,
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        error: error.message || 'Failed to upload voice message',
         code: 'UPLOAD_ERROR',
         timestamp: new Date().toISOString(),
       });
