@@ -23,6 +23,7 @@ export class MessageService {
         content,
         type,
         direction,
+        status: direction === 'outgoing' ? 'sent' : 'delivered', // Set initial status
         imageUrl,
         voiceUrl,
         duration,
@@ -32,10 +33,49 @@ export class MessageService {
       },
     });
 
+    // Update customer's updatedAt for sorting
+    await prisma.customer.update({
+      where: { id: customerId },
+      data: { updatedAt: new Date() },
+    });
+
+    // Increment unread count for incoming messages
+    if (direction === 'incoming' && message.customer) {
+      await CustomerService.incrementUnreadCount(customerId, socketManager);
+    }
+
     // Broadcast new message to account via WebSocket
     if (socketManager && message.customer) {
       socketManager.broadcastToAccount(message.customer.userId, 'message:new', {
         message,
+        customerId: message.customerId,
+      });
+    }
+
+    return message;
+  }
+
+  /**
+   * Update message status (sent, delivered, read)
+   */
+  static async updateMessageStatus(
+    messageId: string,
+    status: 'sending' | 'sent' | 'delivered' | 'read' | 'failed',
+    socketManager?: SocketManager
+  ) {
+    const message = await prisma.message.update({
+      where: { id: messageId },
+      data: { status },
+      include: {
+        customer: true,
+      },
+    });
+
+    // Broadcast status update via WebSocket
+    if (socketManager && message.customer) {
+      socketManager.broadcastToAccount(message.customer.userId, 'message:status', {
+        messageId,
+        status,
         customerId: message.customerId,
       });
     }

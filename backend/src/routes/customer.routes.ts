@@ -9,5 +9,7 @@ router.use(authenticate);
 router.post('/', CustomerController.createCustomer);
 router.get('/', CustomerController.listCustomers);
 router.get('/:id', CustomerController.getCustomer);
+router.post('/:id/read', CustomerController.markAsRead);
+router.delete('/:id', CustomerController.deleteCustomer);
 
 export default router;

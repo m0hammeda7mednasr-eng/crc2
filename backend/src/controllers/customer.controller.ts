@@ -89,4 +89,62 @@ export class CustomerController {
       });
     }
   }
+
+  /**
+   * Mark customer messages as read
+   * POST /api/customers/:id/read
+   */
+  static async markAsRead(req: Request, res: Response) {
+    try {
+      const userId = extractAccountId(req);
+      const { id } = req.params;
+      const socketManager = req.app.get('socketManager');
+
+      await CustomerService.resetUnreadCount(id as string, userId, socketManager);
+
+      res.status(200).json({ 
+        message: 'Messages marked as read',
+        success: true 
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        error: 'Failed to mark messages as read',
+        code: 'SERVER_ERROR',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
+   * Delete customer
+   * DELETE /api/customers/:id
+   */
+  static async deleteCustomer(req: Request, res: Response) {
+    try {
+      const userId = extractAccountId(req);
+      const { id } = req.params;
+      const socketManager = req.app.get('socketManager');
+
+      await CustomerService.deleteCustomer(id as string, userId, socketManager);
+
+      res.status(200).json({ 
+        message: 'Customer deleted successfully',
+        success: true 
+      });
+    } catch (error: any) {
+      if (error.message === 'Customer not found or access denied') {
+        return res.status(404).json({
+          error: error.message,
+          code: 'NOT_FOUND',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      res.status(500).json({
+        error: 'Failed to delete customer',
+        code: 'SERVER_ERROR',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
 }
