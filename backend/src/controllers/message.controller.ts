@@ -85,6 +85,10 @@ export class MessageController {
           let fullImageUrl = imageUrl;
           if (imageUrl && !imageUrl.startsWith('http')) {
             const baseUrl = process.env.BACKEND_URL || process.env.API_URL || `${req.protocol}://${req.get('host')}`;
+            console.log(`🔧 Base URL: ${baseUrl}`);
+            console.log(`🔧 BACKEND_URL env: ${process.env.BACKEND_URL}`);
+            console.log(`🔧 req.protocol: ${req.protocol}`);
+            console.log(`🔧 req.get('host'): ${req.get('host')}`);
             fullImageUrl = `${baseUrl}${imageUrl}`;
             console.log(`📸 Converting image URL: ${imageUrl} -> ${fullImageUrl}`);
           }
@@ -96,6 +100,13 @@ export class MessageController {
             console.log(`🎤 Converting voice URL: ${voiceUrl} -> ${fullVoiceUrl}`);
           }
 
+          console.log(`📤 Sending to n8n:`, {
+            phoneNumber: customer.phoneNumber,
+            type,
+            imageUrl: fullImageUrl,
+            voiceUrl: fullVoiceUrl,
+          });
+
           await MessageService.sendToN8n(
             settings.n8nWebhookUrl,
             customer.phoneNumber,
@@ -106,6 +117,7 @@ export class MessageController {
             duration
           );
           n8nSuccess = true;
+          console.log(`✅ Message sent to n8n successfully`);
         } catch (error: any) {
           console.error('Failed to send to n8n:', error.message);
           // Continue anyway - store message locally
