@@ -5,6 +5,8 @@ dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
+import { existsSync, mkdirSync } from 'fs';
+import { join } from 'path';
 import { SocketManager } from './utils/socket.manager';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 import { apiLimiter } from './middleware/rate-limit.middleware';
@@ -23,6 +25,13 @@ import shopifyRoutes from './routes/shopify.routes';
 
 const app = express();
 const httpServer = createServer(app);
+
+// Ensure uploads directory exists
+const uploadsDir = process.env.UPLOAD_DIR || './uploads';
+if (!existsSync(uploadsDir)) {
+  mkdirSync(uploadsDir, { recursive: true });
+  console.log(`📁 Created uploads directory: ${uploadsDir}`);
+}
 
 // Initialize Socket.io
 const socketManager = new SocketManager(httpServer);

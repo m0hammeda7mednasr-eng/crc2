@@ -12,7 +12,14 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + '-' + file.originalname);
+    
+    // Get file extension
+    const ext = file.originalname.split('.').pop() || 'jpg';
+    
+    // Create safe filename (no special characters, no Arabic/Unicode)
+    const safeFilename = `image-${uniqueSuffix}.${ext}`;
+    
+    cb(null, safeFilename);
   },
 });
 

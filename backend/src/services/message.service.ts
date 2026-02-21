@@ -103,26 +103,36 @@ export class MessageService {
    * Handle image upload
    */
   static async handleImageUpload(file: Express.Multer.File): Promise<string> {
-    // In production, upload to cloud storage (S3, Cloudinary, etc.)
-    // For now, return local path
-    const imageUrl = `/uploads/${file.filename}`;
-    return imageUrl;
+    try {
+      // In production, upload to cloud storage (S3, Cloudinary, etc.)
+      // For now, return local path
+      const imageUrl = `/uploads/${file.filename}`;
+      
+      console.log(`✅ Image uploaded successfully: ${imageUrl}`);
+      
+      return imageUrl;
+    } catch (error: any) {
+      console.error('Image upload error:', error);
+      throw new Error(`Failed to handle image upload: ${error.message}`);
+    }
   }
 
   /**
    * Validate image file
    */
   static validateImageFile(file: Express.Multer.File): boolean {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg', 'image/webp'];
     const maxSize = 5 * 1024 * 1024; // 5MB
 
     if (!allowedTypes.includes(file.mimetype)) {
-      throw new Error('Invalid file type. Only JPEG, PNG, and GIF are allowed.');
+      throw new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.');
     }
 
     if (file.size > maxSize) {
       throw new Error('File size exceeds 5MB limit.');
     }
+
+    console.log(`✅ Image validated: ${file.originalname} (${file.mimetype}, ${(file.size / 1024).toFixed(2)}KB)`);
 
     return true;
   }
