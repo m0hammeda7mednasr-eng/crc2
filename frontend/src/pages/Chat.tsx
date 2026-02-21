@@ -12,7 +12,11 @@ const Chat = () => {
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [newCustomerPhone, setNewCustomerPhone] = useState('');
   const [newCustomerName, setNewCustomerName] = useState('');
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchCustomers();
@@ -62,14 +66,34 @@ const Chat = () => {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputText.trim() || !selectedCustomer) return;
+    if ((!inputText.trim() && !selectedImage) || !selectedCustomer) return;
 
     setLoading(true);
     try {
+      let imageUrl: string | undefined;
+
+      // Upload image first if selected
+      if (selectedImage) {
+        setUploadingImage(true);
+        const formData = new FormData();
+        formData.append('image', selectedImage);
+
+        const uploadResponse = await api.post('/api/messages/upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        imageUrl = uploadResponse.data.imageUrl;
+        setUploadingImage(false);
+      }
+
+      // Send message
       const response = await api.post('/api/messages/send', {
         customerId: selectedCustomer.id,
-        content: inputText,
-        type: 'text',
+        content: inputText.trim() || (imageUrl ? 'Image' : 'Message'),
+        type: imageUrl ? 'image' : 'text',
+        imageUrl,
       });
       
       // Add message to local state immediately
@@ -77,12 +101,54 @@ const Chat = () => {
         setMessages((prev) => [...prev, response.data.data]);
       }
       
+      // Reset form
       setInputText('');
-    } catch (error) {
+      setSelectedImage(null);
+      setImagePreview(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error: any) {
       console.error('Failed to send message:', error);
-      alert('Failed to send message. Please try again.');
+      const errorMsg = error.response?.data?.error || 'Failed to send message. Please try again.';
+      alert(errorMsg);
     } finally {
       setLoading(false);
+      setUploadingImage(false);
+    }
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size must be less than 5MB');
+      return;
+    }
+
+    setSelectedImage(file);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -300,19 +366,28 @@ const Chat = () => {
                       className={`flex ${message.direction === 'outgoing' ? 'justify-end' : 'justify-start'} animate-fade-in`}
                     >
                       <div
-                        className={`max-w-xs md:max-w-md px-4 py-3 rounded-2xl shadow-md ${
+                        className={`max-w-xs md:max-w-md rounded-2xl shadow-md ${
                           message.direction === 'outgoing'
                             ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-br-none'
                             : 'bg-white text-gray-900 rounded-bl-none border border-gray-200'
                         }`}
                       >
                         {message.type === 'image' && message.imageUrl && (
-                          <img src={message.imageUrl} alt="Message" className="rounded-xl mb-2 max-w-full" />
+                          <div className="p-2">
+                            <img 
+                              src={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${message.imageUrl}`}
+                              alt="Shared image" 
+                              className="rounded-xl max-w-full cursor-pointer hover:opacity-90 transition-opacity"
+                              onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${message.imageUrl}`, '_blank')}
+                            />
+                          </div>
                         )}
-                        <p className="break-words">{message.content}</p>
-                        <p className={`text-xs mt-2 ${message.direction === 'outgoing' ? 'text-primary-100' : 'text-gray-500'}`}>
-                          {message.createdAt ? new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now'}
-                        </p>
+                        <div className="px-4 py-3">
+                          <p className="break-words">{message.content}</p>
+                          <p className={`text-xs mt-2 ${message.direction === 'outgoing' ? 'text-primary-100' : 'text-gray-500'}`}>
+                            {message.createdAt ? new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now'}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   ))
@@ -321,7 +396,52 @@ const Chat = () => {
               </div>
 
               <form onSubmit={handleSendMessage} className="p-6 border-t border-gray-200 bg-white">
+                {/* Image Preview */}
+                {imagePreview && (
+                  <div className="mb-4 relative inline-block">
+                    <img 
+                      src={imagePreview} 
+                      alt="Preview" 
+                      className="max-h-32 rounded-xl border-2 border-primary-300 shadow-md"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full hover:bg-red-600 flex items-center justify-center shadow-lg"
+                    >
+                      ×
+                    </button>
+                    {uploadingImage && (
+                      <div className="absolute inset-0 bg-black bg-opacity-50 rounded-xl flex items-center justify-center">
+                        <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex space-x-3">
+                  {/* Hidden file input */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="hidden"
+                  />
+
+                  {/* Image upload button */}
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={loading || uploadingImage}
+                    className="px-4 py-3 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    title="Attach image"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+
                   <input
                     type="text"
                     value={inputText}
@@ -331,13 +451,22 @@ const Chat = () => {
                   />
                   <button
                     type="submit"
-                    disabled={loading || !inputText.trim()}
+                    disabled={loading || uploadingImage || (!inputText.trim() && !selectedImage)}
                     className="px-8 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-full hover:from-primary-700 hover:to-primary-800 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-lg transition-all flex items-center space-x-2"
                   >
-                    <span>Send</span>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
+                    {uploadingImage ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Send</span>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
