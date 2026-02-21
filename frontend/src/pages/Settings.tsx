@@ -422,8 +422,8 @@ const Settings = () => {
                 </div>
                 <div className="p-2 bg-white rounded border border-yellow-200">
                   <p className="font-semibold text-yellow-900">2️⃣ Redirect URI (الأصفر) 👇</p>
-                  <p className="text-xs text-yellow-700">• يُستخدم في: Shopify Partners → App Setup</p>
-                  <p className="text-xs text-yellow-700">• الغرض: ربط التطبيق بـ Shopify (OAuth)</p>
+                  <p className="text-xs text-yellow-700">• يُستخدم في: Shopify Admin → Settings → Apps → Develop apps</p>
+                  <p className="text-xs text-yellow-700">• الغرض: ربط Custom App بـ Shopify (OAuth)</p>
                   <p className="text-xs text-yellow-700">• واحد لكل المتاجر (نفس الرابط للجميع)</p>
                 </div>
               </div>
@@ -503,8 +503,8 @@ const Settings = () => {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-bold text-yellow-900">📋 Shopify Redirect URI</h3>
-                <p className="text-sm text-yellow-700">Add this to your Shopify app settings</p>
+                <h3 className="text-lg font-bold text-yellow-900">📋 Redirect URI للربط بـ Shopify</h3>
+                <p className="text-sm text-yellow-700">استخدم هذا الرابط عند إنشاء Custom App في Shopify</p>
               </div>
             </div>
 
@@ -530,19 +530,22 @@ const Settings = () => {
             </div>
 
             <div className="p-4 bg-white rounded-lg border border-yellow-200">
-              <p className="text-sm font-semibold text-yellow-900 mb-3">📝 كيفية الاستخدام (3 خطوات):</p>
+              <p className="text-sm font-semibold text-yellow-900 mb-3">📝 خطوات الربط من Shopify Admin:</p>
               <ol className="text-sm text-yellow-800 space-y-2 list-decimal list-inside">
-                <li className="font-semibold">اذهب إلى: <a href="https://partners.shopify.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Shopify Partners</a></li>
-                <li>في إعدادات التطبيق (App setup)، الصق <span className="font-bold text-red-600">هذا الرابط (Redirect URI)</span> في:
+                <li>اذهب إلى متجرك في Shopify Admin: <code className="bg-yellow-100 px-2 py-0.5 rounded">your-store.myshopify.com/admin</code></li>
+                <li>من القائمة: <span className="font-semibold">Settings → Apps and sales channels → Develop apps</span></li>
+                <li>اضغط <span className="font-semibold">"Create an app"</span> أو اختر تطبيق موجود</li>
+                <li>في تبويب <span className="font-semibold">"Configuration"</span>:
                   <ul className="mt-1 mr-6 space-y-1 list-disc list-inside text-xs">
-                    <li><span className="font-semibold">App URL</span> - الصق الرابط هنا</li>
-                    <li><span className="font-semibold">Allowed redirection URL(s)</span> - الصق نفس الرابط هنا كمان</li>
+                    <li>في <span className="font-semibold">App URL</span>: الصق الرابط أعلاه</li>
+                    <li>في <span className="font-semibold">Allowed redirection URL(s)</span>: الصق نفس الرابط</li>
                   </ul>
                 </li>
-                <li className="font-semibold">احفظ التغييرات ✅</li>
+                <li>احفظ التغييرات، ثم انسخ <span className="font-semibold">API key</span> و <span className="font-semibold">API secret key</span></li>
+                <li>ارجع هنا وأدخل البيانات في الأسفل ✅</li>
               </ol>
               <div className="mt-3 p-2 bg-yellow-100 rounded text-xs text-yellow-900">
-                <span className="font-semibold">💡 ملحوظة مهمة:</span> هذا الرابط (Redirect URI) مختلف عن رابط الـ Webhook اللي فوق! كل واحد ليه استخدام مختلف.
+                <span className="font-semibold">💡 ملاحظة:</span> الربط يتم من Shopify Admin مباشرة (Custom App Development)، مش من Shopify Partners!
               </div>
             </div>
           </div>

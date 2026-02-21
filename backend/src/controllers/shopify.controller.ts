@@ -297,18 +297,26 @@ export class ShopifyController {
    */
   static async getRedirectUri(req: Request, res: Response) {
     try {
-      const redirectUri = process.env.SHOPIFY_REDIRECT_URI;
+      // Try to get from environment first
+      let redirectUri = process.env.SHOPIFY_REDIRECT_URI;
       
+      // If not in environment, build it from request
       if (!redirectUri) {
-        return res.status(500).json({
-          error: 'Shopify OAuth redirect URI not configured',
-          code: 'CONFIG_ERROR',
-        });
+        const host = req.get('host');
+        const protocol = req.protocol;
+        const forwardedHost = req.get('x-forwarded-host');
+        const forwardedProto = req.get('x-forwarded-proto');
+        
+        // Use forwarded headers if available (Railway/ngrok sets these)
+        const actualHost = forwardedHost || host;
+        const actualProtocol = forwardedProto || protocol;
+        
+        redirectUri = `${actualProtocol}://${actualHost}/api/shopify/auth/callback`;
       }
 
       res.status(200).json({
         redirectUri,
-        instructions: 'Use this URL as the "App URL" and "Allowed redirection URL(s)" in your Shopify app settings.',
+        instructions: 'Use this URL in Shopify Admin → Settings → Apps → Develop apps → Configuration',
       });
     } catch (error: any) {
       console.error('Get redirect URI error:', error);
