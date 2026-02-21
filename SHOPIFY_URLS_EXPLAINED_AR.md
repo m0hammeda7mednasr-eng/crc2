@@ -21,8 +21,8 @@ https://backend-production-8d86c.up.railway.app/api/webhook/shopify/orders/whk_a
 ```
 https://backend-production-8d86c.up.railway.app/api/shopify/auth/callback
 ```
-- **يُستخدم في:** Shopify Partners → App Setup
-- **الغرض:** ربط التطبيق بـ Shopify (OAuth)
+- **يُستخدم في:** Shopify Admin → Settings → Apps → Develop apps
+- **الغرض:** ربط Custom App بـ Shopify (OAuth)
 - **واحد للجميع:** نفس الرابط لكل العملاء
 
 ---
@@ -35,7 +35,7 @@ https://backend-production-8d86c.up.railway.app/api/shopify/auth/callback
 ده الرابط اللي Shopify هيبعت عليه الطلبات (Orders) لما حد يعمل order جديد.
 
 #### فين بيتحط؟
-1. افتح **Shopify Admin** (admin.shopify.com)
+1. افتح **Shopify Admin** (your-store.myshopify.com/admin)
 2. اذهب إلى: **Settings** → **Notifications**
 3. اضغط **Create webhook**
 4. املأ البيانات:
@@ -61,12 +61,13 @@ User 3: https://backend.com/api/webhook/shopify/orders/whk_def456
 ده الرابط اللي Shopify هيرجع عليه العميل بعد ما يوافق على ربط التطبيق (OAuth).
 
 #### فين بيتحط؟
-1. افتح **Shopify Partners** (partners.shopify.com)
-2. اذهب إلى: **Apps** → اختار التطبيق → **App setup**
-3. الصق الرابط الأصفر في **مكانين**:
-   - **App URL:** الصق الرابط هنا
-   - **Allowed redirection URL(s):** الصق نفس الرابط هنا كمان
-4. احفظ ✅
+1. افتح **Shopify Admin** (your-store.myshopify.com/admin)
+2. اذهب إلى: **Settings** → **Apps and sales channels** → **Develop apps**
+3. اضغط **Create an app** أو اختر تطبيق موجود
+4. في تبويب **Configuration**:
+   - **App URL:** الصق الرابط الأصفر
+   - **Allowed redirection URL(s):** الصق نفس الرابط
+5. احفظ ✅
 
 #### مثال:
 ```
@@ -82,7 +83,7 @@ All Users: https://backend.com/api/shopify/auth/callback
 | الميزة | Webhook URL 🔵 | Redirect URI 🟡 |
 |--------|---------------|----------------|
 | **الاستخدام** | استقبال Orders | ربط التطبيق (OAuth) |
-| **المكان** | Shopify Admin | Shopify Partners |
+| **المكان** | Shopify Admin → Notifications | Shopify Admin → Develop apps |
 | **التكرار** | فريد لكل متجر | واحد للجميع |
 | **التغيير** | يتغير لكل عميل | ثابت |
 | **الأمان** | Token فريد | OAuth state |
@@ -91,17 +92,20 @@ All Users: https://backend.com/api/shopify/auth/callback
 
 ## 🔄 خطوات الإعداد الكاملة
 
-### المرحلة 1: إعداد التطبيق في Shopify Partners (مرة واحدة فقط)
+### المرحلة 1: إنشاء Custom App في Shopify Admin (لكل عميل)
 
-1. اذهب إلى: https://partners.shopify.com
-2. **Apps** → **Create app** → **Custom app**
-3. في **App setup**:
-   - **App URL:** الصق الـ **Redirect URI** (الأصفر)
+1. اذهب إلى متجرك: **your-store.myshopify.com/admin**
+2. من القائمة: **Settings** → **Apps and sales channels**
+3. اضغط **Develop apps**
+4. اضغط **Create an app**
+5. أدخل اسم التطبيق (مثلاً: "CRM Integration")
+6. في تبويب **Configuration**:
+   - **App URL:** الصق الـ **Redirect URI** (الأصفر) من CRM Settings
    - **Allowed redirection URL(s):** الصق نفس الـ **Redirect URI**
-4. في **API credentials**:
+7. في تبويب **API credentials**:
    - انسخ **API key** (Client ID)
    - انسخ **API secret key** (Client Secret)
-5. احفظ ✅
+8. احفظ ✅
 
 ---
 
@@ -112,8 +116,8 @@ All Users: https://backend.com/api/shopify/auth/callback
    - اضغط **Configure Shopify Credentials**
    - أدخل:
      - **Shop Domain:** your-store.myshopify.com
-     - **Client ID:** من Shopify Partners
-     - **Client Secret:** من Shopify Partners
+     - **Client ID:** من Shopify Admin
+     - **Client Secret:** من Shopify Admin
    - احفظ
 3. اضغط **Connect with Shopify**
 4. وافق على الصلاحيات في Shopify
@@ -231,9 +235,11 @@ All Users: https://backend.com/api/shopify/auth/callback
 
 ## 📸 Screenshots Guide
 
-### Screenshot 1: Shopify Partners - App Setup
+### Screenshot 1: Shopify Admin - Develop Apps
 ```
 ┌─────────────────────────────────────┐
+│ Configuration                       │
+│                                     │
 │ App URL                             │
 │ [Redirect URI هنا]                 │
 │                                     │
@@ -256,14 +262,16 @@ All Users: https://backend.com/api/shopify/auth/callback
 ## 🎉 الخلاصة
 
 ### الرابط الأزرق (Webhook URL):
-- 🔵 **فين:** Shopify Admin → Webhooks
+- 🔵 **فين:** Shopify Admin → Settings → Notifications → Webhooks
 - 🔵 **ليه:** استقبال Orders
 - 🔵 **مختلف:** لكل متجر
 
 ### الرابط الأصفر (Redirect URI):
-- 🟡 **فين:** Shopify Partners → App Setup
-- 🟡 **ليه:** ربط التطبيق (OAuth)
+- 🟡 **فين:** Shopify Admin → Settings → Apps → Develop apps
+- 🟡 **ليه:** ربط Custom App (OAuth)
 - 🟡 **واحد:** لكل المتاجر
+
+**ملحوظة مهمة:** كل الإعداد بيتم من Shopify Admin مباشرة، مش محتاجين Shopify Partners!
 
 **الآن واضح؟** 😊
 
