@@ -13,12 +13,15 @@ export interface Customer {
   id: string;
   phoneNumber: string;
   name?: string;
+  profileImage?: string;
+  unreadCount: number;
   userId: string;
   createdAt: string;
   updatedAt: string;
   messages?: Message[];
   _count?: {
     messages: number;
+    orders: number;
   };
 }
 
@@ -28,6 +31,7 @@ export interface Message {
   content: string;
   type: 'text' | 'image';
   direction: 'incoming' | 'outgoing';
+  status: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
   imageUrl?: string;
   createdAt: string;
   customer?: Customer;

@@ -29,11 +29,55 @@ const Chat = () => {
       if (selectedCustomer && message.customerId === selectedCustomer.id) {
         setMessages((prev) => [...prev, message]);
       }
+      // Update unread count for incoming messages
+      if (message.direction === 'incoming' && (!selectedCustomer || message.customerId !== selectedCustomer.id)) {
+        setCustomers(prev => 
+          prev.map(c => 
+            c.id === message.customerId 
+              ? { ...c, unreadCount: (c.unreadCount || 0) + 1 } 
+              : c
+          )
+        );
+      }
+    });
+
+    // Listen for customer updates
+    socketService.on('customer:updated', (data: { customer: Customer }) => {
+      setCustomers(prev => 
+        prev.map(c => 
+          c.id === data.customer.id 
+            ? { ...c, ...data.customer } 
+            : c
+        )
+      );
+    });
+
+    // Listen for customer deletion
+    socketService.on('customer:deleted', (data: { customerId: string }) => {
+      setCustomers(prev => prev.filter(c => c.id !== data.customerId));
+      if (selectedCustomer?.id === data.customerId) {
+        setSelectedCustomer(null);
+        setMessages([]);
+      }
+    });
+
+    // Listen for message status updates
+    socketService.on('message:status', (data: { messageId: string; status: string }) => {
+      setMessages(prev => 
+        prev.map(m => 
+          m.id === data.messageId 
+            ? { ...m, status: data.status as Message['status'] } 
+            : m
+        )
+      );
     });
 
     return () => {
       socketService.off('customer:new');
       socketService.off('message:new');
+      socketService.off('customer:updated');
+      socketService.off('customer:deleted');
+      socketService.off('message:status');
     };
   }, [selectedCustomer]);
 
@@ -59,9 +103,25 @@ const Chat = () => {
     }
   };
 
-  const handleCustomerSelect = (customer: Customer) => {
+  const handleCustomerSelect = async (customer: Customer) => {
     setSelectedCustomer(customer);
     fetchMessages(customer.id);
+    
+    // Mark as read
+    if (customer.unreadCount > 0) {
+      try {
+        await api.post(`/api/customers/${customer.id}/read`);
+        setCustomers(prev => 
+          prev.map(c => 
+            c.id === customer.id 
+              ? { ...c, unreadCount: 0 } 
+              : c
+          )
+        );
+      } catch (error) {
+        console.error('Failed to mark as read:', error);
+      }
+    }
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -181,6 +241,24 @@ const Chat = () => {
       alert(errorMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteCustomer = async (customerId: string) => {
+    if (!confirm('Are you sure you want to delete this chat? This will delete all messages and cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await api.delete(`/api/customers/${customerId}`);
+      setCustomers(prev => prev.filter(c => c.id !== customerId));
+      if (selectedCustomer?.id === customerId) {
+        setSelectedCustomer(null);
+        setMessages([]);
+      }
+    } catch (error) {
+      console.error('Failed to delete customer:', error);
+      alert('Failed to delete chat');
     }
   };
 
@@ -304,20 +382,58 @@ const Chat = () => {
                   <div
                     key={customer.id}
                     onClick={() => handleCustomerSelect(customer)}
-                    className={`p-4 border-b border-gray-100 cursor-pointer transition-all hover:bg-gray-50 ${
-                      selectedCustomer?.id === customer.id ? 'bg-primary-50 border-l-4 border-l-primary-600' : ''
+                    className={`group p-4 border-b border-gray-100 cursor-pointer transition-all hover:bg-gray-50 ${
+                      selectedCustomer?.id === customer.id 
+                        ? 'bg-primary-50 border-l-4 border-l-primary-600' 
+                        : (customer.unreadCount || 0) > 0 
+                        ? 'bg-blue-50'
+                        : ''
                     }`}
                   >
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
-                      {((customer.name || customer.phoneNumber || '?').charAt(0).toUpperCase())}
+                    {/* Profile Image or Avatar */}
+                    <div className="relative">
+                      {customer.profileImage ? (
+                        <img 
+                          src={customer.profileImage} 
+                          alt={customer.name || 'Customer'} 
+                          className="w-12 h-12 rounded-full object-cover shadow-md"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
+                          {((customer.name || customer.phoneNumber || '?').charAt(0).toUpperCase())}
+                        </div>
+                      )}
+                      
+                      {/* Unread Badge */}
+                      {(customer.unreadCount || 0) > 0 && (
+                        <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
+                          {customer.unreadCount > 9 ? '9+' : customer.unreadCount}
+                        </div>
+                      )}
                     </div>
+                    
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 truncate">
+                      <p className={`font-semibold truncate ${(customer.unreadCount || 0) > 0 ? 'text-gray-900' : 'text-gray-700'}`}>
                         {customer.name || customer.phoneNumber || 'Unknown'}
                       </p>
                       <p className="text-sm text-gray-500 truncate">{customer.phoneNumber || 'No phone'}</p>
                     </div>
+                    
+                    {/* Delete Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteCustomer(customer.id);
+                      }}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                      title="Delete chat"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                    
                     {selectedCustomer?.id === customer.id && (
                       <div className="w-2 h-2 bg-primary-600 rounded-full"></div>
                     )}
@@ -384,9 +500,31 @@ const Chat = () => {
                         )}
                         <div className="px-4 py-3">
                           <p className="break-words">{message.content}</p>
-                          <p className={`text-xs mt-2 ${message.direction === 'outgoing' ? 'text-primary-100' : 'text-gray-500'}`}>
-                            {message.createdAt ? new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now'}
-                          </p>
+                          <div className="flex items-center justify-between mt-2">
+                            <p className={`text-xs ${message.direction === 'outgoing' ? 'text-primary-100' : 'text-gray-500'}`}>
+                              {message.createdAt ? new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now'}
+                            </p>
+                            {/* Message Status Indicators */}
+                            {message.direction === 'outgoing' && (
+                              <div className="flex items-center ml-2">
+                                {message.status === 'sending' && (
+                                  <span className="text-primary-100 text-xs">⏰</span>
+                                )}
+                                {message.status === 'sent' && (
+                                  <span className="text-primary-100 text-sm">✓</span>
+                                )}
+                                {message.status === 'delivered' && (
+                                  <span className="text-primary-100 text-sm">✓✓</span>
+                                )}
+                                {message.status === 'read' && (
+                                  <span className="text-blue-300 text-sm">✓✓</span>
+                                )}
+                                {message.status === 'failed' && (
+                                  <span className="text-red-300 text-xs">❌</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
