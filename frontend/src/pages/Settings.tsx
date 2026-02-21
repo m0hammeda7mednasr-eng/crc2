@@ -532,17 +532,17 @@ const Settings = () => {
             <div className="p-4 bg-white rounded-lg border border-yellow-200">
               <p className="text-sm font-semibold text-yellow-900 mb-3">📝 خطوات الربط من Shopify Admin:</p>
               <ol className="text-sm text-yellow-800 space-y-2 list-decimal list-inside">
-                <li>اذهب إلى متجرك في Shopify Admin: <code className="bg-yellow-100 px-2 py-0.5 rounded">your-store.myshopify.com/admin</code></li>
+                <li>اذهب إلى متجرك في Shopify Admin: <code className="bg-yellow-100 px-2 py-0.5 rounded font-semibold">your-store.myshopify.com/admin</code></li>
                 <li>من القائمة: <span className="font-semibold">Settings → Apps and sales channels → Develop apps</span></li>
                 <li>اضغط <span className="font-semibold">"Create an app"</span> أو اختر تطبيق موجود</li>
                 <li>في تبويب <span className="font-semibold">"Configuration"</span>:
                   <ul className="mt-1 mr-6 space-y-1 list-disc list-inside text-xs">
-                    <li>في <span className="font-semibold">App URL</span>: الصق الرابط أعلاه</li>
-                    <li>في <span className="font-semibold">Allowed redirection URL(s)</span>: الصق نفس الرابط</li>
+                    <li>في <span className="font-semibold">App URL</span>: الصق الرابط أعلاه ☝️</li>
+                    <li>في <span className="font-semibold">Allowed redirection URL(s)</span>: الصق نفس الرابط ☝️</li>
                   </ul>
                 </li>
                 <li>احفظ التغييرات، ثم انسخ <span className="font-semibold">API key</span> و <span className="font-semibold">API secret key</span></li>
-                <li>ارجع هنا وأدخل البيانات في الأسفل ✅</li>
+                <li>ارجع هنا وأدخل البيانات في الأسفل 👇</li>
               </ol>
               <div className="mt-3 p-2 bg-yellow-100 rounded text-xs text-yellow-900">
                 <span className="font-semibold">💡 ملاحظة:</span> الربط يتم من Shopify Admin مباشرة (Custom App Development)، مش من Shopify Partners!
@@ -632,9 +632,15 @@ const Settings = () => {
               </>
             ) : (
               <form onSubmit={handleSaveCredentials} className="space-y-4">
+                <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg mb-4">
+                  <p className="text-xs text-purple-800">
+                    <span className="font-semibold">💡 ملحوظة:</span> Shop Domain هو domain متجرك في Shopify (مثلاً: <code className="bg-purple-100 px-1 rounded">your-store.myshopify.com</code>)، مش domain الـ CRM!
+                  </p>
+                </div>
+
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Shop Domain
+                    Shop Domain (دومين متجر Shopify)
                   </label>
                   <input
                     type="text"
@@ -644,6 +650,7 @@ const Settings = () => {
                     placeholder="your-store.myshopify.com"
                     required
                   />
+                  <p className="text-xs text-gray-500 mt-1">مثال: rgrds.myshopify.com</p>
                 </div>
 
                 <div>
@@ -658,6 +665,7 @@ const Settings = () => {
                     placeholder="Enter your Shopify API Key"
                     required
                   />
+                  <p className="text-xs text-gray-500 mt-1">من Shopify Admin → Develop apps → API credentials</p>
                 </div>
 
                 <div>
