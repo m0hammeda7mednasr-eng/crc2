@@ -6,7 +6,9 @@ const router = Router();
 
 router.use(webhookLimiter);
 
-// User-specific incoming webhook (from n8n)
+// User-specific incoming webhook (supports both webhook token and userId)
+// Recommended: /incoming/whk_xxxxxxxxxxxxxxxx (unique token per user)
+// Legacy: /incoming/{userId} (still supported)
 router.post('/incoming/:userId', WebhookController.handleIncomingMessage);
 
 // Shopify webhooks

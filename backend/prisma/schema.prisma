@@ -19,6 +19,7 @@ model User {
   username              String?    @unique
   passwordHash          String
   role                  String     @default("user") // user, admin
+  webhookToken          String?    @unique // Unique token for webhook URLs
   shopifyDomain         String?
   shopifyClientId       String?    // Shopify API Key (Client ID)
   shopifyClientSecret   String?    // Encrypted - Shopify API Secret Key
@@ -41,6 +42,7 @@ model User {
   @@index([email])
   @@index([role])
   @@index([subscriptionId])
+  @@index([webhookToken])
 }
 
 model Subscription {
@@ -93,9 +95,11 @@ model Customer {
 model Message {
   id          String   @id @default(uuid())
   content     String
-  type        String   @default("text") // text, image, button
+  type        String   @default("text") // text, image, voice, button
   direction   String   // incoming, outgoing
   imageUrl    String?
+  voiceUrl    String?  // URL to voice message file
+  duration    Int?     // Voice message duration in seconds
   customerId  String
   createdAt   DateTime @default(now())
   

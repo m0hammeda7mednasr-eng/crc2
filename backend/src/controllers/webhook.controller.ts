@@ -12,8 +12,8 @@ import {
 export class WebhookController {
   /**
    * Handle incoming WhatsApp message
-   * POST /api/webhooks/incoming/:userId (recommended)
-   * POST /api/webhooks/whatsapp/incoming (legacy)
+   * POST /api/webhook/incoming/:token (recommended - unique per user)
+   * POST /api/webhook/incoming/:userId (legacy - still supported)
    */
   static async handleIncomingMessage(req: Request, res: Response) {
     try {
@@ -37,8 +37,35 @@ export class WebhookController {
       // Get socket manager
       const socketManager = req.app.get('socketManager');
 
-      // Get userId from URL parameter (preferred) or payload (legacy)
-      let userId = (req.params.userId as string) || payload.userId;
+      // Get token or userId from URL parameter
+      const tokenOrUserId = req.params.userId as string || req.params.token as string;
+      let userId: string | undefined;
+
+      if (tokenOrUserId) {
+        // Check if it's a webhook token (starts with whk_)
+        if (tokenOrUserId.startsWith('whk_')) {
+          const user = await prisma.user.findUnique({
+            where: { webhookToken: tokenOrUserId },
+            select: { id: true },
+          });
+          
+          if (!user) {
+            return res.status(401).json({
+              error: 'Invalid webhook token',
+              code: 'INVALID_TOKEN',
+              timestamp: new Date().toISOString(),
+            });
+          }
+          
+          userId = user.id;
+        } else {
+          // Assume it's a userId (legacy support)
+          userId = tokenOrUserId;
+        }
+      } else {
+        // Fallback: try to get from payload
+        userId = payload.userId;
+      }
 
       // If userId not provided, look up existing customer
       if (!userId) {
@@ -47,8 +74,7 @@ export class WebhookController {
         if (existingCustomer) {
           userId = existingCustomer.userId;
         } else {
-          // ⚠️ WARNING: In production with multiple users, always send userId explicitly.
-          // This fallback assigns to the first user and is only safe for single-user setups.
+          // ⚠️ WARNING: In production with multiple users, always send token/userId explicitly.
           const firstUser = await CustomerService.getFirstUser();
           if (!firstUser) {
             return res.status(400).json({
@@ -58,9 +84,9 @@ export class WebhookController {
             });
           }
           console.warn(
-            `[Webhook] No userId provided for phone ${phoneNumber}. ` +
+            `[Webhook] No token/userId provided for phone ${phoneNumber}. ` +
             `Falling back to first user (${firstUser.id}). ` +
-            `Send userId explicitly in production with multiple users.`
+            `Use webhook token in production with multiple users.`
           );
           userId = firstUser.id;
         }

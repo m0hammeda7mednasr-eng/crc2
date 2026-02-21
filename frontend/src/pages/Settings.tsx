@@ -12,6 +12,11 @@ const Settings = () => {
     isConnected: false
   });
   
+  // Webhook Token (unique per user)
+  const [webhookToken, setWebhookToken] = useState('');
+  const [webhookUrl, setWebhookUrl] = useState('');
+  const [loadingWebhookToken, setLoadingWebhookToken] = useState(false);
+  
   // Shopify credentials form
   const [showCredentialsForm, setShowCredentialsForm] = useState(false);
   const [shopifyDomain, setShopifyDomain] = useState('');
@@ -28,6 +33,7 @@ const Settings = () => {
 
   useEffect(() => {
     fetchSettings();
+    fetchWebhookToken();
     fetchShopifyWebhookUrl();
     
     // Check if redirected from Shopify OAuth
@@ -39,6 +45,19 @@ const Settings = () => {
       window.history.replaceState({}, '', '/settings');
     }
   }, []);
+
+  const fetchWebhookToken = async () => {
+    try {
+      setLoadingWebhookToken(true);
+      const response = await api.get('/api/settings/webhook-token');
+      setWebhookToken(response.data.webhookToken);
+      setWebhookUrl(response.data.webhookUrl);
+    } catch (error) {
+      console.error('Failed to fetch webhook token:', error);
+    } finally {
+      setLoadingWebhookToken(false);
+    }
+  };
 
   const fetchShopifyWebhookUrl = async () => {
     try {
@@ -79,21 +98,6 @@ const Settings = () => {
     }
   };
 
-  // Get user's unique webhook URL for receiving messages
-  const getWebhookUrl = () => {
-    const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    const token = localStorage.getItem('token');
-    if (!token) return '';
-    
-    // Decode token to get user ID
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return `${backendUrl}/api/webhook/incoming/${payload.userId}`;
-    } catch {
-      return '';
-    }
-  };
-
   // Get user ID for Shopify webhook payload
   const getUserId = () => {
     const token = localStorage.getItem('token');
@@ -113,10 +117,28 @@ const Settings = () => {
   };
 
   const copyWebhookUrl = () => {
-    const url = getWebhookUrl();
-    navigator.clipboard.writeText(url);
+    navigator.clipboard.writeText(webhookUrl);
     setMessage('Webhook URL copied to clipboard!');
     setTimeout(() => setMessage(''), 3000);
+  };
+
+  const handleRegenerateToken = async () => {
+    if (!confirm('Are you sure? This will invalidate your current webhook URL and you\'ll need to update all integrations.')) {
+      return;
+    }
+
+    try {
+      setLoadingWebhookToken(true);
+      const response = await api.post('/api/settings/webhook-token/regenerate');
+      setWebhookToken(response.data.webhookToken);
+      setWebhookUrl(response.data.webhookUrl);
+      setMessage('Webhook token regenerated! Update your integrations with the new URL.');
+    } catch (error: any) {
+      console.error('Failed to regenerate token:', error);
+      setMessage(error.response?.data?.error || 'Failed to regenerate token');
+    } finally {
+      setLoadingWebhookToken(false);
+    }
   };
 
   const copyShopifyWebhookUrl = () => {
@@ -274,19 +296,20 @@ const Settings = () => {
           {/* Incoming Webhook URL - Read Only */}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-gray-700 mb-3">
-              Your Incoming Webhook URL
+              🔐 Your Unique Webhook URL
             </label>
             <div className="flex space-x-2">
               <input
                 type="text"
-                value={getWebhookUrl()}
+                value={loadingWebhookToken ? 'Loading...' : webhookUrl}
                 readOnly
                 className="flex-1 px-6 py-4 border-2 border-gray-300 rounded-xl bg-gray-50 text-gray-700 text-sm font-mono"
               />
               <button
                 type="button"
                 onClick={copyWebhookUrl}
-                className="px-6 py-4 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors flex items-center space-x-2"
+                disabled={loadingWebhookToken}
+                className="px-6 py-4 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -294,12 +317,24 @@ const Settings = () => {
                 <span>Copy</span>
               </button>
             </div>
-            <p className="text-sm text-gray-500 mt-3 flex items-center space-x-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mt-3 flex items-start space-x-2">
+              <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span>Use this URL in n8n to send incoming WhatsApp messages to your CRM</span>
-            </p>
+              <div className="text-sm text-gray-600 space-y-1">
+                <p className="font-semibold">This is YOUR unique webhook URL - different from other users!</p>
+                <p>Use this URL in n8n or any integration to send incoming WhatsApp messages to your CRM.</p>
+                <p className="text-xs text-gray-500">Token: <code className="bg-gray-100 px-2 py-0.5 rounded font-mono">{webhookToken || 'Loading...'}</code></p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleRegenerateToken}
+              disabled={loadingWebhookToken}
+              className="mt-3 px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg hover:bg-yellow-200 transition-colors text-sm font-medium disabled:opacity-50"
+            >
+              🔄 Regenerate Token (will invalidate old URL)
+            </button>
           </div>
 
           {/* Outgoing Webhook URL - User Input */}
