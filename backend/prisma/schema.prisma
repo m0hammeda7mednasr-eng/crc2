@@ -75,40 +75,52 @@ model Subscription {
 }
 
 model Customer {
-  id          String    @id @default(uuid())
-  phoneNumber String
-  name        String?
-  userId      String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String    @id @default(uuid())
+  phoneNumber   String
+  name          String?
+  profileImage  String?   // Profile image URL
+  unreadCount   Int       @default(0) // Number of unread messages
+  userId        String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messages    Message[]
-  orders      Order[]
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages      Message[]
+  orders        Order[]
   
   @@unique([phoneNumber, userId])
   @@index([userId])
   @@index([phoneNumber])
+  @@index([userId, updatedAt]) // For sorting by last activity
   @@map("customers")
 }
 
 model Message {
-  id          String   @id @default(uuid())
+  id          String        @id @default(uuid())
   content     String
-  type        String   @default("text") // text, image, voice, button
-  direction   String   // incoming, outgoing
+  type        String        @default("text") // text, image, voice, button
+  direction   String        // incoming, outgoing
+  status      MessageStatus @default(sent) // Message delivery status
   imageUrl    String?
-  voiceUrl    String?  // URL to voice message file
-  duration    Int?     // Voice message duration in seconds
+  voiceUrl    String?       // URL to voice message file
+  duration    Int?          // Voice message duration in seconds
   customerId  String
-  createdAt   DateTime @default(now())
+  createdAt   DateTime      @default(now())
   
-  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customer    Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
   
   @@index([customerId])
   @@index([createdAt])
   @@index([customerId, createdAt])
   @@map("messages")
+}
+
+enum MessageStatus {
+  sending
+  sent
+  delivered
+  read
+  failed
 }
 
 model Order {
