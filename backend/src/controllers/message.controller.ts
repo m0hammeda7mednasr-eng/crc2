@@ -218,4 +218,48 @@ export class MessageController {
       });
     }
   }
+
+  /**
+   * Test image URL conversion
+   * GET /api/messages/test-image-url
+   */
+  static async testImageUrl(req: Request, res: Response) {
+    try {
+      const testImageUrl = '/uploads/test-image-123.jpg';
+      
+      // Get base URL using same logic as sendMessage
+      const baseUrl = process.env.BACKEND_URL || process.env.API_URL || `${req.protocol}://${req.get('host')}`;
+      const fullImageUrl = `${baseUrl}${testImageUrl}`;
+
+      res.status(200).json({
+        message: 'Image URL conversion test',
+        environment: {
+          BACKEND_URL: process.env.BACKEND_URL || 'NOT SET',
+          API_URL: process.env.API_URL || 'NOT SET',
+          NODE_ENV: process.env.NODE_ENV,
+        },
+        request: {
+          protocol: req.protocol,
+          host: req.get('host'),
+          fullUrl: `${req.protocol}://${req.get('host')}`,
+        },
+        conversion: {
+          relativeUrl: testImageUrl,
+          baseUrl: baseUrl,
+          fullUrl: fullImageUrl,
+        },
+        explanation: {
+          step1: 'Check if BACKEND_URL is set in environment',
+          step2: 'If not, fallback to API_URL',
+          step3: 'If not, use request protocol + host',
+          result: `Using: ${process.env.BACKEND_URL ? 'BACKEND_URL' : process.env.API_URL ? 'API_URL' : 'Request URL'}`,
+        },
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        error: error.message,
+        code: 'SERVER_ERROR',
+      });
+    }
+  }
 }

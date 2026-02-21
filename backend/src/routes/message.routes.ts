@@ -52,6 +52,7 @@ const upload = multer({
 
 router.use(authenticate);
 
+router.get('/test-image-url', MessageController.testImageUrl);
 router.get('/:customerId', MessageController.getMessages);
 router.post('/send', MessageController.sendMessage);
 router.post('/upload', upload.single('image'), MessageController.uploadImage);
