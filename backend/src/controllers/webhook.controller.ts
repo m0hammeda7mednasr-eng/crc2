@@ -203,9 +203,9 @@ export class WebhookController {
 
   /**
    * Handle Shopify order sync (Direct from Shopify webhook)
-   * POST /api/webhooks/shopify/orders
-   * POST /api/webhooks/shopify/orders?shop=store.myshopify.com
-   * POST /api/webhooks/shopify/orders?userId=xxx (legacy)
+   * POST /api/webhook/shopify/orders/:token (recommended - unique per user)
+   * POST /api/webhook/shopify/orders?shop=store.myshopify.com (legacy)
+   * POST /api/webhook/shopify/orders?userId=xxx (legacy)
    */
   static async handleShopifyOrder(req: Request, res: Response) {
     try {
@@ -216,31 +216,57 @@ export class WebhookController {
         // Direct Shopify webhook format
         const order = req.body;
         
-        // Get shop domain from query parameter, header, or order data
-        let shopDomain = req.query.shop as string || 
-                        req.headers['x-shopify-shop-domain'] as string ||
-                        order.shop_domain;
+        // Get token from URL parameter (recommended)
+        const token = req.params.token as string;
+        let userId: string | undefined;
         
-        // Get userId from query parameter (legacy support)
-        let userId = req.query.userId as string || req.headers['x-user-id'] as string;
-        
-        // If shop domain provided, find user by shop domain
-        if (shopDomain && !userId) {
-          // Remove .myshopify.com if present to normalize
-          const normalizedDomain = shopDomain.replace('.myshopify.com', '');
-          
-          const user = await prisma.user.findFirst({
-            where: {
-              OR: [
-                { shopifyDomain: shopDomain },
-                { shopifyDomain: normalizedDomain },
-                { shopifyDomain: `${normalizedDomain}.myshopify.com` },
-              ],
-            },
-          });
-          
-          if (user) {
+        if (token) {
+          // Use webhook token (recommended)
+          if (token.startsWith('whk_')) {
+            const user = await prisma.user.findUnique({
+              where: { webhookToken: token },
+              select: { id: true },
+            });
+            
+            if (!user) {
+              return res.status(401).json({
+                error: 'Invalid webhook token',
+                code: 'INVALID_TOKEN',
+                timestamp: new Date().toISOString(),
+              });
+            }
+            
             userId = user.id;
+          } else {
+            // Assume it's userId (legacy)
+            userId = token;
+          }
+        } else {
+          // Fallback: try shop domain or userId from query
+          let shopDomain = req.query.shop as string || 
+                          req.headers['x-shopify-shop-domain'] as string ||
+                          order.shop_domain;
+          
+          userId = req.query.userId as string || req.headers['x-user-id'] as string;
+          
+          // If shop domain provided, find user by shop domain
+          if (shopDomain && !userId) {
+            // Remove .myshopify.com if present to normalize
+            const normalizedDomain = shopDomain.replace('.myshopify.com', '');
+            
+            const user = await prisma.user.findFirst({
+              where: {
+                OR: [
+                  { shopifyDomain: shopDomain },
+                  { shopifyDomain: normalizedDomain },
+                  { shopifyDomain: `${normalizedDomain}.myshopify.com` },
+                ],
+              },
+            });
+            
+            if (user) {
+              userId = user.id;
+            }
           }
         }
         
@@ -249,10 +275,9 @@ export class WebhookController {
           const firstUser = await CustomerService.getFirstUser();
           if (!firstUser) {
             return res.status(400).json({
-              error: 'No user found. Please provide shop domain or userId.',
+              error: 'No user found. Please provide webhook token.',
               code: 'USER_NOT_FOUND',
-              hint: 'Add ?shop=your-store.myshopify.com to the webhook URL',
-              shopDomain: shopDomain || 'not provided',
+              hint: 'Use the webhook URL from Settings page',
             });
           }
           userId = firstUser.id;
@@ -345,8 +370,8 @@ export class WebhookController {
   }
 
   /**
-   * Get Shopify webhook URL for user (with ngrok detection)
-   * GET /api/webhooks/shopify/url
+   * Get Shopify webhook URL for user (uses webhook token)
+   * GET /api/webhook/shopify/url?userId=xxx
    */
   static async getShopifyWebhookUrl(req: Request, res: Response) {
     try {
@@ -359,44 +384,57 @@ export class WebhookController {
         });
       }
 
-      // Get user's Shopify domain
+      // Get user's webhook token
       const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { shopifyDomain: true },
+        select: { 
+          webhookToken: true,
+          shopifyDomain: true,
+        },
       });
 
-      // Try to detect ngrok URL from request headers
+      if (!user) {
+        return res.status(404).json({
+          error: 'User not found',
+          code: 'NOT_FOUND',
+        });
+      }
+
+      // Generate webhook token if doesn't exist
+      let webhookToken = user.webhookToken;
+      if (!webhookToken) {
+        const { generateWebhookToken } = await import('../utils/webhook-token');
+        webhookToken = generateWebhookToken();
+        
+        await prisma.user.update({
+          where: { id: userId },
+          data: { webhookToken },
+        });
+      }
+
+      // Try to detect URL from request headers
       const host = req.get('host');
       const protocol = req.protocol;
       const forwardedHost = req.get('x-forwarded-host');
       const forwardedProto = req.get('x-forwarded-proto');
       
-      // Use forwarded headers if available (ngrok sets these)
+      // Use forwarded headers if available (ngrok/Railway sets these)
       const actualHost = forwardedHost || host;
       const actualProtocol = forwardedProto || protocol;
       
       const baseUrl = `${actualProtocol}://${actualHost}`;
       
-      // Build webhook URL with shop domain if available
-      let webhookUrl: string;
-      if (user?.shopifyDomain) {
-        // Use shop domain (cleaner and more intuitive)
-        const shopDomain = user.shopifyDomain.replace('.myshopify.com', '');
-        webhookUrl = `${baseUrl}/api/webhook/shopify/orders?shop=${shopDomain}`;
-      } else {
-        // Fallback to userId (legacy)
-        webhookUrl = `${baseUrl}/api/webhook/shopify/orders?userId=${userId}`;
-      }
+      // Build webhook URL with token (recommended)
+      const webhookUrl = `${baseUrl}/api/webhook/shopify/orders/${webhookToken}`;
 
       res.status(200).json({
         webhookUrl,
+        webhookToken,
         userId,
-        shopDomain: user?.shopifyDomain || null,
+        shopDomain: user.shopifyDomain || null,
         baseUrl,
         isHttps: actualProtocol === 'https',
-        instructions: user?.shopifyDomain 
-          ? `Use this URL in Shopify webhook settings. The shop domain (${user.shopifyDomain}) is automatically detected.`
-          : 'Use this URL in Shopify webhook settings. Configure your Shopify domain in Settings for a cleaner URL.',
+        instructions: 'Use this URL in Shopify webhook settings. Each user has a unique webhook URL.',
       });
     } catch (error: any) {
       console.error('Get webhook URL error:', error);

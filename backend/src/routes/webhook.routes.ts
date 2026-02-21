@@ -11,8 +11,10 @@ router.use(webhookLimiter);
 // Legacy: /incoming/{userId} (still supported)
 router.post('/incoming/:userId', WebhookController.handleIncomingMessage);
 
-// Shopify webhooks
-router.post('/shopify/orders', WebhookController.handleShopifyOrder);
+// Shopify webhooks (supports webhook token)
+// Recommended: /shopify/orders/whk_xxxxxxxxxxxxxxxx (unique token per user)
+// Legacy: /shopify/orders?shop=store.myshopify.com (still supported)
+router.post('/shopify/orders/:token?', WebhookController.handleShopifyOrder);
 router.get('/shopify/url', WebhookController.getShopifyWebhookUrl);
 
 // Legacy routes (for backward compatibility)

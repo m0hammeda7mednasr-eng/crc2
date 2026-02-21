@@ -25,6 +25,7 @@ const Settings = () => {
   
   // Shopify webhook URL from backend
   const [shopifyWebhookUrl, setShopifyWebhookUrl] = useState('');
+  const [shopifyRedirectUri, setShopifyRedirectUri] = useState('');
   const [loadingWebhookUrl, setLoadingWebhookUrl] = useState(false);
   
   const [loading, setLoading] = useState(false);
@@ -35,6 +36,7 @@ const Settings = () => {
     fetchSettings();
     fetchWebhookToken();
     fetchShopifyWebhookUrl();
+    fetchShopifyRedirectUri();
     
     // Check if redirected from Shopify OAuth
     const params = new URLSearchParams(window.location.search);
@@ -71,6 +73,15 @@ const Settings = () => {
       console.error('Failed to fetch webhook URL:', error);
     } finally {
       setLoadingWebhookUrl(false);
+    }
+  };
+
+  const fetchShopifyRedirectUri = async () => {
+    try {
+      const response = await api.get('/api/shopify/redirect-uri');
+      setShopifyRedirectUri(response.data.redirectUri);
+    } catch (error) {
+      console.error('Failed to fetch redirect URI:', error);
     }
   };
 
@@ -145,6 +156,12 @@ const Settings = () => {
     const url = getShopifyWebhookUrl();
     navigator.clipboard.writeText(url);
     setMessage('Shopify Webhook URL copied to clipboard!');
+    setTimeout(() => setMessage(''), 3000);
+  };
+
+  const copyRedirectUri = () => {
+    navigator.clipboard.writeText(shopifyRedirectUri);
+    setMessage('Redirect URI copied to clipboard!');
     setTimeout(() => setMessage(''), 3000);
   };
 
@@ -521,6 +538,32 @@ const Settings = () => {
                     </li>
                   </ul>
                 </div>
+
+                {/* Redirect URI Display */}
+                {shopifyRedirectUri && (
+                  <div className="p-4 bg-yellow-50 border-2 border-yellow-300 rounded-xl">
+                    <p className="text-sm font-semibold text-yellow-900 mb-2">📋 Important: Redirect URI</p>
+                    <p className="text-xs text-yellow-800 mb-3">Copy this URL and add it to your Shopify app settings:</p>
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={shopifyRedirectUri}
+                        readOnly
+                        className="flex-1 px-3 py-2 border border-yellow-400 rounded-lg bg-white text-gray-800 text-xs font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={copyRedirectUri}
+                        className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm font-medium"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                    <p className="text-xs text-yellow-700 mt-2">
+                      ⚠️ Add this as both "App URL" and "Allowed redirection URL(s)" in Shopify Partners
+                    </p>
+                  </div>
+                )}
 
                 <button
                   onClick={() => setShowCredentialsForm(true)}

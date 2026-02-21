@@ -10,6 +10,7 @@ router.post('/credentials', authenticate, ShopifyController.saveCredentials);
 // OAuth flow routes
 router.get('/auth/start', authenticate, ShopifyController.startOAuth);
 router.get('/auth/callback', ShopifyController.handleCallback);
+router.get('/redirect-uri', ShopifyController.getRedirectUri);
 
 // Connection management
 router.get('/test-connection', authenticate, ShopifyController.testConnection);

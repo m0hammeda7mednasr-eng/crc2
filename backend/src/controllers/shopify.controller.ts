@@ -290,4 +290,33 @@ export class ShopifyController {
       });
     }
   }
+
+  /**
+   * Get Shopify OAuth redirect URI
+   * GET /api/shopify/redirect-uri
+   */
+  static async getRedirectUri(req: Request, res: Response) {
+    try {
+      const redirectUri = process.env.SHOPIFY_REDIRECT_URI;
+      
+      if (!redirectUri) {
+        return res.status(500).json({
+          error: 'Shopify OAuth redirect URI not configured',
+          code: 'CONFIG_ERROR',
+        });
+      }
+
+      res.status(200).json({
+        redirectUri,
+        instructions: 'Use this URL as the "App URL" and "Allowed redirection URL(s)" in your Shopify app settings.',
+      });
+    } catch (error: any) {
+      console.error('Get redirect URI error:', error);
+      res.status(500).json({
+        error: 'Failed to get redirect URI',
+        code: 'SERVER_ERROR',
+        details: error.message,
+      });
+    }
+  }
 }
