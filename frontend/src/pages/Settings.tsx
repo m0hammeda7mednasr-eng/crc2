@@ -405,6 +405,32 @@ const Settings = () => {
           </div>
         </div>
 
+        {/* Important Notice - Explain the difference */}
+        <div className="mb-6 p-5 bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-300 rounded-xl">
+          <div className="flex items-start space-x-3">
+            <svg className="w-6 h-6 text-indigo-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="text-sm text-indigo-900">
+              <p className="font-bold mb-2">📌 مهم جداً: فيه 2 روابط مختلفة تماماً!</p>
+              <div className="space-y-2">
+                <div className="p-2 bg-white rounded border border-blue-200">
+                  <p className="font-semibold text-blue-900">1️⃣ Shopify Webhook URL (الأزرق) 👇</p>
+                  <p className="text-xs text-blue-700">• يُستخدم في: Shopify Admin → Settings → Notifications → Webhooks</p>
+                  <p className="text-xs text-blue-700">• الغرض: استقبال الطلبات (Orders) من Shopify</p>
+                  <p className="text-xs text-blue-700">• فريد لكل متجر (مختلف لكل عميل)</p>
+                </div>
+                <div className="p-2 bg-white rounded border border-yellow-200">
+                  <p className="font-semibold text-yellow-900">2️⃣ Redirect URI (الأصفر) 👇</p>
+                  <p className="text-xs text-yellow-700">• يُستخدم في: Shopify Partners → App Setup</p>
+                  <p className="text-xs text-yellow-700">• الغرض: ربط التطبيق بـ Shopify (OAuth)</p>
+                  <p className="text-xs text-yellow-700">• واحد لكل المتاجر (نفس الرابط للجميع)</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Shopify Webhook Configuration - Simple */}
         <div className="mb-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-xl">
           <div className="flex items-center space-x-3 mb-4">
@@ -504,8 +530,20 @@ const Settings = () => {
             </div>
 
             <div className="p-4 bg-white rounded-lg border border-yellow-200">
-              <p className="text-sm font-semibold text-yellow-900 mb-2">⚠️ Important:</p>
-              <p className="text-sm text-yellow-800">Add this URL as both "App URL" and "Allowed redirection URL(s)" in Shopify Partners app settings</p>
+              <p className="text-sm font-semibold text-yellow-900 mb-3">📝 كيفية الاستخدام (3 خطوات):</p>
+              <ol className="text-sm text-yellow-800 space-y-2 list-decimal list-inside">
+                <li className="font-semibold">اذهب إلى: <a href="https://partners.shopify.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Shopify Partners</a></li>
+                <li>في إعدادات التطبيق (App setup)، الصق <span className="font-bold text-red-600">هذا الرابط (Redirect URI)</span> في:
+                  <ul className="mt-1 mr-6 space-y-1 list-disc list-inside text-xs">
+                    <li><span className="font-semibold">App URL</span> - الصق الرابط هنا</li>
+                    <li><span className="font-semibold">Allowed redirection URL(s)</span> - الصق نفس الرابط هنا كمان</li>
+                  </ul>
+                </li>
+                <li className="font-semibold">احفظ التغييرات ✅</li>
+              </ol>
+              <div className="mt-3 p-2 bg-yellow-100 rounded text-xs text-yellow-900">
+                <span className="font-semibold">💡 ملحوظة مهمة:</span> هذا الرابط (Redirect URI) مختلف عن رابط الـ Webhook اللي فوق! كل واحد ليه استخدام مختلف.
+              </div>
             </div>
           </div>
         )}
