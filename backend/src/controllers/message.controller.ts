@@ -81,13 +81,28 @@ export class MessageController {
       let n8nSuccess = false;
       if (settings?.n8nWebhookUrl) {
         try {
+          // Convert relative image URL to full URL for WhatsApp
+          let fullImageUrl = imageUrl;
+          if (imageUrl && !imageUrl.startsWith('http')) {
+            const baseUrl = process.env.BACKEND_URL || process.env.API_URL || `${req.protocol}://${req.get('host')}`;
+            fullImageUrl = `${baseUrl}${imageUrl}`;
+            console.log(`📸 Converting image URL: ${imageUrl} -> ${fullImageUrl}`);
+          }
+
+          let fullVoiceUrl = voiceUrl;
+          if (voiceUrl && !voiceUrl.startsWith('http')) {
+            const baseUrl = process.env.BACKEND_URL || process.env.API_URL || `${req.protocol}://${req.get('host')}`;
+            fullVoiceUrl = `${baseUrl}${voiceUrl}`;
+            console.log(`🎤 Converting voice URL: ${voiceUrl} -> ${fullVoiceUrl}`);
+          }
+
           await MessageService.sendToN8n(
             settings.n8nWebhookUrl,
             customer.phoneNumber,
             content,
             type,
-            imageUrl,
-            voiceUrl,
+            fullImageUrl,
+            fullVoiceUrl,
             duration
           );
           n8nSuccess = true;
