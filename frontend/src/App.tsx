@@ -12,6 +12,7 @@ import AdminUserDetails from './pages/AdminUserDetails';
 // import AdminAnalytics from './pages/AdminAnalytics';
 import AdminSettings from './pages/AdminSettings';
 import Layout from './components/Layout';
+import InstallAppPrompt from './components/InstallAppPrompt';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -45,6 +46,7 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <InstallAppPrompt />
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
