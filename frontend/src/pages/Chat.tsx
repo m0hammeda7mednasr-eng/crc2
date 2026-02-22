@@ -266,7 +266,7 @@ const Chat = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] md:h-[calc(100vh-8rem)]">
+    <div className="h-screen md:h-[calc(100vh-4rem)] flex flex-col">
       {/* Add Customer Modal */}
       {showAddCustomer && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -335,7 +335,7 @@ const Chat = () => {
         </div>
       )}
 
-      <div className="h-full flex bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+      <div className="flex-1 flex bg-white md:rounded-2xl md:shadow-xl overflow-hidden md:border border-gray-200">
         {/* Customer List - Enhanced Design */}
         <div className={`w-full md:w-1/3 border-r border-gray-200 flex flex-col bg-gradient-to-b from-gray-50 to-white ${isMobile && selectedCustomer ? 'hidden' : ''}`}>
           <div className="p-6 border-b border-gray-200 bg-white">
@@ -456,19 +456,21 @@ const Chat = () => {
               {isMobile && <ChatHeader customer={selectedCustomer} onBack={() => setSelectedCustomer(null)} />}
               
               {/* Desktop Header */}
-              <div className="p-6 border-b border-gray-200 bg-white shadow-sm hidden md:block">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
-                    {((selectedCustomer.name || selectedCustomer.phoneNumber || '?').charAt(0).toUpperCase())}
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg text-gray-900">
-                      {selectedCustomer.name || selectedCustomer.phoneNumber || 'Unknown'}
-                    </h3>
-                    <p className="text-sm text-gray-500">{selectedCustomer.phoneNumber || 'No phone'}</p>
+              {!isMobile && (
+                <div className="p-6 border-b border-gray-200 bg-white shadow-sm">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
+                      {((selectedCustomer.name || selectedCustomer.phoneNumber || '?').charAt(0).toUpperCase())}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-900">
+                        {selectedCustomer.name || selectedCustomer.phoneNumber || 'Unknown'}
+                      </h3>
+                      <p className="text-sm text-gray-500">{selectedCustomer.phoneNumber || 'No phone'}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               <div className="flex-1 overflow-y-auto p-6 space-y-4" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%239C92AC\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }}>
                 {messages.length === 0 ? (

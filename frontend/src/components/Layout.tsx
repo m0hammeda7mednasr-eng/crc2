@@ -96,8 +96,8 @@ const Layout = () => {
       </div>
 
       {/* Main content */}
-      <div className={`lg:ml-64 ${location.pathname === '/chat' ? 'pt-0 pb-16' : 'pt-16 pb-20'} lg:pt-0 md:pb-0`}>
-        <main className={`${location.pathname === '/chat' ? 'p-0 md:p-6' : 'p-6'}`}>
+      <div className={`lg:ml-64 ${location.pathname === '/chat' ? 'pt-0 pb-16 md:pb-0' : 'pt-16 pb-20'} lg:pt-0 md:pb-0`}>
+        <main className={`${location.pathname === '/chat' ? 'h-screen md:h-auto p-0 md:p-6' : 'p-6'}`}>
           <Outlet />
         </main>
       </div>
