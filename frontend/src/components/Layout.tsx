@@ -23,7 +23,7 @@ const Layout = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-md z-50 p-4">
+      <div className={`lg:hidden fixed top-0 left-0 right-0 bg-white shadow-md z-50 p-4 ${location.pathname === '/chat' ? 'hidden' : ''}`}>
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="text-gray-600 hover:text-gray-900"
@@ -96,8 +96,8 @@ const Layout = () => {
       </div>
 
       {/* Main content */}
-      <div className="lg:ml-64 pt-16 lg:pt-0 pb-20 md:pb-0">
-        <main className="p-6">
+      <div className={`lg:ml-64 ${location.pathname === '/chat' ? 'pt-0 pb-16' : 'pt-16 pb-20'} lg:pt-0 md:pb-0`}>
+        <main className={`${location.pathname === '/chat' ? 'p-0 md:p-6' : 'p-6'}`}>
           <Outlet />
         </main>
       </div>

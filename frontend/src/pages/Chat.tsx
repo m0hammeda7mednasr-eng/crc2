@@ -266,7 +266,7 @@ const Chat = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-8rem)]">
+    <div className="h-[calc(100vh-4rem)] md:h-[calc(100vh-8rem)]">
       {/* Add Customer Modal */}
       {showAddCustomer && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -449,7 +449,7 @@ const Chat = () => {
         </div>
 
         {/* Chat Area - Enhanced Design */}
-        <div className="flex-1 flex flex-col bg-gradient-to-b from-gray-50 to-white">
+        <div className={`flex-1 flex flex-col bg-gradient-to-b from-gray-50 to-white ${isMobile && !selectedCustomer ? 'hidden' : ''}`}>
           {selectedCustomer ? (
             <>
               {/* Mobile Header with Back Button */}
