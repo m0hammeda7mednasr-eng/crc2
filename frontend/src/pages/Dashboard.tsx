@@ -8,6 +8,9 @@ const Dashboard = () => {
     totalOrders: 0,
     confirmedOrders: 0,
     cancelledOrders: 0,
+    pendingOrders: 0,
+    totalRevenue: 0,
+    topProducts: [],
   });
   const [loading, setLoading] = useState(true);
 
@@ -49,7 +52,7 @@ const Dashboard = () => {
         <div className="text-6xl animate-bounce">👋</div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-xl p-6 text-white transform hover:scale-105 transition-transform">
           <div className="flex items-center justify-between">
             <div>
@@ -58,6 +61,17 @@ const Dashboard = () => {
               <p className="text-blue-100 text-sm mt-2">All time</p>
             </div>
             <div className="text-6xl opacity-20">📦</div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl shadow-xl p-6 text-white transform hover:scale-105 transition-transform">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-yellow-100 text-sm font-medium">Pending</p>
+              <p className="text-5xl font-bold mt-3">{stats.pendingOrders || 0}</p>
+              <p className="text-yellow-100 text-sm mt-2">Awaiting confirmation</p>
+            </div>
+            <div className="text-6xl opacity-20">⏳</div>
           </div>
         </div>
 
@@ -83,6 +97,55 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Revenue Card */}
+      <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl shadow-xl p-8 text-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-purple-100 text-sm font-medium mb-2">Total Revenue</p>
+            <p className="text-6xl font-bold">${(stats.totalRevenue || 0).toFixed(2)}</p>
+            <p className="text-purple-100 text-sm mt-3">From {stats.confirmedOrders} confirmed orders</p>
+          </div>
+          <div className="text-9xl opacity-20">💰</div>
+        </div>
+      </div>
+
+      {/* Top Products */}
+      {stats.topProducts && stats.topProducts.length > 0 && (
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200">
+          <div className="flex items-center space-x-4 mb-6">
+            <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+              <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Top Products</h2>
+              <p className="text-gray-600">Best selling items from confirmed orders</p>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            {stats.topProducts.map((product, index) => (
+              <div key={product.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                <div className="flex items-center space-x-4 flex-1 min-w-0">
+                  <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                    {index + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">{product.name}</p>
+                    <p className="text-sm text-gray-500">Sold {product.count} units</p>
+                  </div>
+                </div>
+                <div className="text-right ml-4">
+                  <p className="text-lg font-bold text-green-600">${product.revenue.toFixed(2)}</p>
+                  <p className="text-xs text-gray-500">Revenue</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200">

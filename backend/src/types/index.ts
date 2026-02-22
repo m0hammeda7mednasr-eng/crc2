@@ -69,6 +69,14 @@ export interface DashboardStats {
   totalOrders: number;
   confirmedOrders: number;
   cancelledOrders: number;
+  pendingOrders?: number;
+  totalRevenue?: number;
+  topProducts?: Array<{
+    id: string;
+    name: string;
+    count: number;
+    revenue: number;
+  }>;
 }
 
 export interface ErrorResponse {

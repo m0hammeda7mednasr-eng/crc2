@@ -163,98 +163,65 @@ const Orders = () => {
           {filteredOrders.map((order) => (
             <div 
               key={order.id} 
-              className={`bg-white ${isMobile ? 'rounded-none border-y' : 'rounded-2xl border'} shadow-lg border-gray-200 hover:shadow-xl transition-all overflow-hidden`}
+              className={`bg-white ${isMobile ? 'rounded-none border-y' : 'rounded-xl border'} shadow-md border-gray-200 hover:shadow-lg transition-all overflow-hidden`}
             >
-              <div className="p-4 md:p-6">
-                <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
-                  {/* Order Info */}
-                  <div className="flex-1">
-                    <div className="flex items-start space-x-3 md:space-x-4 mb-4">
-                      <div className="w-12 md:w-14 h-12 md:h-14 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center text-white font-bold text-xl md:text-2xl shadow-lg flex-shrink-0">
-                        📦
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-col md:flex-row md:items-center md:space-x-2 mb-1">
-                          <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-1 md:mb-0">Order #{order.orderNumber}</h3>
-                          <span className={`px-2.5 md:px-3 py-1 rounded-full text-xs font-bold shadow-sm ${getStatusColor(order.status)} inline-block w-fit`}>
-                            {order.status === 'pending' && '⏳ '}
-                            {order.status === 'confirmed' && '✅ '}
-                            {order.status === 'cancelled' && '❌ '}
-                            {order.status.toUpperCase()}
-                          </span>
-                        </div>
-                        <p className="text-xs md:text-sm text-gray-500">
-                          {new Date(order.createdAt).toLocaleDateString('en-US', { 
-                            year: 'numeric', 
-                            month: isMobile ? 'short' : 'long', 
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
-                      </div>
+              <div className="p-3 md:p-4">
+                <div className="flex items-center justify-between gap-3">
+                  {/* Order Info - Compact */}
+                  <div className="flex items-center space-x-2 md:space-x-3 flex-1 min-w-0">
+                    <div className="w-10 md:w-12 h-10 md:h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center text-white font-bold text-base md:text-lg shadow flex-shrink-0">
+                      📦
                     </div>
-                    
-                    {/* Customer Details */}
-                    <div className="bg-gray-50 rounded-xl p-3 md:p-4 space-y-2 md:space-y-3">
-                      <div className="flex items-center space-x-2 md:space-x-3">
-                        <div className="w-8 md:w-10 h-8 md:h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center text-white flex-shrink-0">
-                          <svg className="w-4 md:w-5 h-4 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-500 font-medium">Customer</p>
-                          <p className="text-sm font-semibold text-gray-900 truncate">{order.customerName}</p>
-                        </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-0.5">
+                        <h3 className="text-sm md:text-base font-bold text-gray-900">#{order.orderNumber}</h3>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${getStatusColor(order.status)}`}>
+                          {order.status === 'pending' && '⏳'}
+                          {order.status === 'confirmed' && '✅'}
+                          {order.status === 'cancelled' && '❌'}
+                        </span>
                       </div>
-                      
-                      <div className="flex items-center space-x-2 md:space-x-3">
-                        <div className="w-8 md:w-10 h-8 md:h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center text-white flex-shrink-0">
-                          <svg className="w-4 md:w-5 h-4 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                          </svg>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-500 font-medium">Phone</p>
-                          <p className="text-sm font-semibold text-gray-900 truncate">{order.customerPhone}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2 md:space-x-3">
-                        <div className="w-8 md:w-10 h-8 md:h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white flex-shrink-0">
-                          <svg className="w-4 md:w-5 h-4 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-500 font-medium">Total Amount</p>
-                          <p className="text-xl md:text-2xl font-bold text-primary-600">${order.total.toFixed(2)}</p>
-                        </div>
-                      </div>
+                      <p className="text-xs text-gray-500 truncate">{order.customerName}</p>
                     </div>
                   </div>
 
-                  {/* Actions */}
+                  {/* Price */}
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-lg md:text-xl font-bold text-primary-600">${order.total.toFixed(2)}</p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(order.createdAt).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric'
+                      })}
+                    </p>
+                  </div>
+
+                  {/* Actions - Only show for pending orders */}
                   {order.status === 'pending' && (
-                    <div className="flex flex-col gap-2 md:min-w-[200px]">
+                    <div className="flex gap-1 md:gap-2 flex-shrink-0">
                       <button
-                        onClick={() => handleStatusUpdate(order.id, 'confirmed')}
-                        className="px-3 md:px-4 py-2.5 md:py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 font-medium shadow-lg transition-all flex items-center justify-center space-x-2 text-sm md:text-base"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStatusUpdate(order.id, 'confirmed');
+                        }}
+                        className="p-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+                        title="Confirm"
                       >
-                        <svg className="w-4 md:w-5 h-4 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        <span>Confirm</span>
                       </button>
                       <button
-                        onClick={() => handleStatusUpdate(order.id, 'cancelled')}
-                        className="px-3 md:px-4 py-2.5 md:py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 font-medium shadow-lg transition-all flex items-center justify-center space-x-2 text-sm md:text-base"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStatusUpdate(order.id, 'cancelled');
+                        }}
+                        className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                        title="Cancel"
                       >
-                        <svg className="w-4 md:w-5 h-4 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                        <span>Cancel</span>
                       </button>
                     </div>
                   )}
@@ -264,11 +231,11 @@ const Orders = () => {
               {/* Order Details Button */}
               <button
                 onClick={() => setSelectedOrder(selectedOrder?.id === order.id ? null : order)}
-                className="w-full px-4 md:px-6 py-2.5 md:py-3 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-center space-x-2 text-gray-700 font-medium border-t border-gray-200 text-sm md:text-base"
+                className="w-full px-3 md:px-4 py-2 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-center space-x-2 text-gray-600 text-xs md:text-sm font-medium border-t border-gray-200"
               >
                 <span>{selectedOrder?.id === order.id ? 'Hide' : 'Show'} Details</span>
                 <svg 
-                  className={`w-4 md:w-5 h-4 md:h-5 transition-transform ${selectedOrder?.id === order.id ? 'rotate-180' : ''}`} 
+                  className={`w-3 md:w-4 h-3 md:h-4 transition-transform ${selectedOrder?.id === order.id ? 'rotate-180' : ''}`} 
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"
@@ -279,24 +246,16 @@ const Orders = () => {
               
               {/* Expanded Details */}
               {selectedOrder?.id === order.id && (
-                <div className="px-4 md:px-6 py-3 md:py-4 bg-gray-50 border-t border-gray-200 animate-fade-in">
-                  <h4 className="font-bold text-gray-900 mb-3 text-sm md:text-base">Order Details</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 text-xs md:text-sm">
-                    <div>
-                      <p className="text-gray-500 font-medium">Order ID</p>
-                      <p className="text-gray-900 font-mono text-xs break-all">{order.id}</p>
+                <div className="px-3 md:px-4 py-3 bg-gray-50 border-t border-gray-200 animate-fade-in">
+                  <h4 className="font-bold text-gray-900 mb-2 text-xs md:text-sm">Customer Details</h4>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-white p-2 rounded-lg">
+                      <p className="text-gray-500 font-medium mb-1">Phone</p>
+                      <p className="text-gray-900 font-semibold">{order.customerPhone}</p>
                     </div>
-                    <div>
-                      <p className="text-gray-500 font-medium">Shopify Order ID</p>
-                      <p className="text-gray-900 font-mono text-xs break-all">{order.shopifyOrderId || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500 font-medium">Customer ID</p>
-                      <p className="text-gray-900 font-mono text-xs break-all">{order.customerId}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500 font-medium">Created At</p>
-                      <p className="text-gray-900 text-xs">{new Date(order.createdAt).toLocaleString()}</p>
+                    <div className="bg-white p-2 rounded-lg">
+                      <p className="text-gray-500 font-medium mb-1">Order Date</p>
+                      <p className="text-gray-900 font-semibold">{new Date(order.createdAt).toLocaleDateString()}</p>
                     </div>
                   </div>
                 </div>

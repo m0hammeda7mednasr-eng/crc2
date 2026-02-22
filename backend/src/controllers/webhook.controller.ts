@@ -112,6 +112,44 @@ export class WebhookController {
         payload.duration
       );
 
+      // Check if message is a response to pending order
+      const contentLower = content.toLowerCase().trim();
+      if (contentLower.includes('confirm') || contentLower.includes('تأكيد') || contentLower.includes('موافق') || contentLower.includes('نعم')) {
+        // Find pending order for this customer
+        const pendingOrder = await prisma.order.findFirst({
+          where: {
+            customerId: customer.id,
+            status: 'pending',
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        });
+
+        if (pendingOrder) {
+          // Update order to confirmed
+          await OrderService.updateOrderStatus(pendingOrder.id, 'confirmed', socketManager);
+          console.log(`✅ Order ${pendingOrder.orderNumber} confirmed by customer ${customer.phoneNumber}`);
+        }
+      } else if (contentLower.includes('cancel') || contentLower.includes('إلغاء') || contentLower.includes('لا') || contentLower.includes('رفض')) {
+        // Find pending order for this customer
+        const pendingOrder = await prisma.order.findFirst({
+          where: {
+            customerId: customer.id,
+            status: 'pending',
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        });
+
+        if (pendingOrder) {
+          // Update order to cancelled
+          await OrderService.updateOrderStatus(pendingOrder.id, 'cancelled', socketManager);
+          console.log(`❌ Order ${pendingOrder.orderNumber} cancelled by customer ${customer.phoneNumber}`);
+        }
+      }
+
       res.status(200).json({
         message: 'Message received successfully',
         data: message,
