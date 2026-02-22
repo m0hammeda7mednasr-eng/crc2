@@ -2,12 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
 import socketService from '../services/socket';
 import { Customer, Message } from '../types';
+import useIsMobile from '../hooks/useIsMobile';
+import ChatHeader from '../components/ChatHeader';
 
 const Chat = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
+  const isMobile = useIsMobile();
   const [loading, setLoading] = useState(false);
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [newCustomerPhone, setNewCustomerPhone] = useState('');
@@ -334,7 +337,7 @@ const Chat = () => {
 
       <div className="h-full flex bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
         {/* Customer List - Enhanced Design */}
-        <div className="w-full md:w-1/3 border-r border-gray-200 flex flex-col bg-gradient-to-b from-gray-50 to-white">
+        <div className={`w-full md:w-1/3 border-r border-gray-200 flex flex-col bg-gradient-to-b from-gray-50 to-white ${isMobile && selectedCustomer ? 'hidden' : ''}`}>
           <div className="p-6 border-b border-gray-200 bg-white">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold text-gray-900">Chats</h2>
@@ -449,7 +452,11 @@ const Chat = () => {
         <div className="flex-1 flex flex-col bg-gradient-to-b from-gray-50 to-white">
           {selectedCustomer ? (
             <>
-              <div className="p-6 border-b border-gray-200 bg-white shadow-sm">
+              {/* Mobile Header with Back Button */}
+              {isMobile && <ChatHeader customer={selectedCustomer} onBack={() => setSelectedCustomer(null)} />}
+              
+              {/* Desktop Header */}
+              <div className="p-6 border-b border-gray-200 bg-white shadow-sm hidden md:block">
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
                     {((selectedCustomer.name || selectedCustomer.phoneNumber || '?').charAt(0).toUpperCase())}
@@ -563,6 +570,7 @@ const Chat = () => {
                     ref={fileInputRef}
                     type="file"
                     accept="image/*"
+                    capture="environment"
                     onChange={handleImageSelect}
                     className="hidden"
                   />

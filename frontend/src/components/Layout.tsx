@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import BottomNav from './BottomNav';
 
 const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -95,11 +96,14 @@ const Layout = () => {
       </div>
 
       {/* Main content */}
-      <div className="lg:ml-64 pt-16 lg:pt-0">
+      <div className="lg:ml-64 pt-16 lg:pt-0 pb-20 md:pb-0">
         <main className="p-6">
           <Outlet />
         </main>
       </div>
+
+      {/* Bottom Navigation for Mobile */}
+      <BottomNav />
 
       {/* Overlay for mobile */}
       {sidebarOpen && (
