@@ -112,37 +112,156 @@ const Dashboard = () => {
 
       {/* Top Products */}
       {stats.topProducts && stats.topProducts.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200">
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-              <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
+        <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 border border-gray-200">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900">Product Statistics</h2>
+                <p className="text-sm md:text-base text-gray-600">Detailed breakdown of all products ordered</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Top Products</h2>
-              <p className="text-gray-600">Best selling items from confirmed orders</p>
-            </div>
+            <div className="hidden md:block text-4xl">📊</div>
           </div>
           
-          <div className="space-y-4">
-            {stats.topProducts.map((product, index) => (
-              <div key={product.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                <div className="flex items-center space-x-4 flex-1 min-w-0">
-                  <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                    {index + 1}
+          {/* Summary Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-6">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-3 md:p-4 border border-blue-200">
+              <p className="text-xs md:text-sm text-blue-600 font-medium mb-1">Total Products</p>
+              <p className="text-2xl md:text-3xl font-bold text-blue-700">{stats.topProducts.length}</p>
+            </div>
+            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-3 md:p-4 border border-green-200">
+              <p className="text-xs md:text-sm text-green-600 font-medium mb-1">Units Sold</p>
+              <p className="text-2xl md:text-3xl font-bold text-green-700">
+                {stats.topProducts.reduce((sum, p) => sum + p.count, 0)}
+              </p>
+            </div>
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-3 md:p-4 border border-purple-200 col-span-2 md:col-span-1">
+              <p className="text-xs md:text-sm text-purple-600 font-medium mb-1">Products Revenue</p>
+              <p className="text-2xl md:text-3xl font-bold text-purple-700">
+                ${stats.topProducts.reduce((sum, p) => sum + p.revenue, 0).toFixed(2)}
+              </p>
+            </div>
+          </div>
+
+          {/* Products Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b-2 border-gray-200">
+                  <th className="text-left py-3 px-2 md:px-4 text-xs md:text-sm font-bold text-gray-700">#</th>
+                  <th className="text-left py-3 px-2 md:px-4 text-xs md:text-sm font-bold text-gray-700">Product Name</th>
+                  <th className="text-center py-3 px-2 md:px-4 text-xs md:text-sm font-bold text-gray-700">Units Sold</th>
+                  <th className="text-right py-3 px-2 md:px-4 text-xs md:text-sm font-bold text-gray-700">Revenue</th>
+                  <th className="text-right py-3 px-2 md:px-4 text-xs md:text-sm font-bold text-gray-700">Avg Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.topProducts.map((product, index) => {
+                  const avgPrice = product.revenue / product.count;
+                  const isTopThree = index < 3;
+                  return (
+                    <tr 
+                      key={product.id} 
+                      className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                        isTopThree ? 'bg-gradient-to-r from-orange-50 to-yellow-50' : ''
+                      }`}
+                    >
+                      <td className="py-3 px-2 md:px-4">
+                        <div className={`w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm ${
+                          index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500' :
+                          index === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-400' :
+                          index === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-500' :
+                          'bg-gradient-to-br from-gray-400 to-gray-500'
+                        }`}>
+                          {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
+                        </div>
+                      </td>
+                      <td className="py-3 px-2 md:px-4">
+                        <p className="font-semibold text-gray-900 text-xs md:text-sm truncate max-w-[150px] md:max-w-none">
+                          {product.name}
+                        </p>
+                      </td>
+                      <td className="py-3 px-2 md:px-4 text-center">
+                        <span className="inline-flex items-center px-2 md:px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
+                          {product.count} units
+                        </span>
+                      </td>
+                      <td className="py-3 px-2 md:px-4 text-right">
+                        <p className="text-sm md:text-base font-bold text-green-600">${product.revenue.toFixed(2)}</p>
+                      </td>
+                      <td className="py-3 px-2 md:px-4 text-right">
+                        <p className="text-xs md:text-sm text-gray-600">${avgPrice.toFixed(2)}</p>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr className="border-t-2 border-gray-300 bg-gray-50 font-bold">
+                  <td colSpan={2} className="py-3 px-2 md:px-4 text-xs md:text-sm text-gray-700">TOTAL</td>
+                  <td className="py-3 px-2 md:px-4 text-center">
+                    <span className="inline-flex items-center px-2 md:px-3 py-1 rounded-full text-xs font-bold bg-blue-600 text-white">
+                      {stats.topProducts.reduce((sum, p) => sum + p.count, 0)} units
+                    </span>
+                  </td>
+                  <td className="py-3 px-2 md:px-4 text-right">
+                    <p className="text-sm md:text-base font-bold text-green-600">
+                      ${stats.topProducts.reduce((sum, p) => sum + p.revenue, 0).toFixed(2)}
+                    </p>
+                  </td>
+                  <td className="py-3 px-2 md:px-4"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          {/* Mobile Cards View (Alternative for very small screens) */}
+          <div className="md:hidden mt-4 space-y-3">
+            {stats.topProducts.map((product, index) => {
+              const avgPrice = product.revenue / product.count;
+              const isTopThree = index < 3;
+              return (
+                <div 
+                  key={product.id}
+                  className={`p-3 rounded-xl border-2 ${
+                    isTopThree ? 'bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-200' : 'bg-white border-gray-200'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm ${
+                        index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500' :
+                        index === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-400' :
+                        index === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-500' :
+                        'bg-gradient-to-br from-gray-400 to-gray-500'
+                      }`}>
+                        {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
+                      </div>
+                      <p className="font-semibold text-gray-900 text-sm">{product.name}</p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 truncate">{product.name}</p>
-                    <p className="text-sm text-gray-500">Sold {product.count} units</p>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div className="bg-blue-50 p-2 rounded-lg text-center">
+                      <p className="text-blue-600 font-medium mb-1">Units</p>
+                      <p className="font-bold text-blue-700">{product.count}</p>
+                    </div>
+                    <div className="bg-green-50 p-2 rounded-lg text-center">
+                      <p className="text-green-600 font-medium mb-1">Revenue</p>
+                      <p className="font-bold text-green-700">${product.revenue.toFixed(0)}</p>
+                    </div>
+                    <div className="bg-purple-50 p-2 rounded-lg text-center">
+                      <p className="text-purple-600 font-medium mb-1">Avg</p>
+                      <p className="font-bold text-purple-700">${avgPrice.toFixed(0)}</p>
+                    </div>
                   </div>
                 </div>
-                <div className="text-right ml-4">
-                  <p className="text-lg font-bold text-green-600">${product.revenue.toFixed(2)}</p>
-                  <p className="text-xs text-gray-500">Revenue</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
