@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import InstallButton from '../components/InstallButton';
 
 interface ShopifyConnection {
   isConnected: boolean;
@@ -264,9 +265,16 @@ const Settings = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Settings</h1>
-        <p className="text-gray-600">Configure your integrations and preferences</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Settings</h1>
+          <p className="text-gray-600">Configure your integrations and preferences</p>
+        </div>
+        
+        {/* Install App Button */}
+        <div className="mt-2">
+          <InstallButton />
+        </div>
       </div>
 
       {message && (

@@ -54,11 +54,11 @@ const InstallAppPrompt = () => {
       };
     }
 
-    // iOS: Show custom prompt for Safari users
+    // iOS: Don't show automatic prompt (Apple doesn't support native install)
+    // User can manually install from Settings page if needed
     if (isIOS && isSafari) {
-      setTimeout(() => {
-        setShowIOSPrompt(true);
-      }, 3000);
+      // Don't show automatic prompt on iOS
+      // setShowIOSPrompt(true);
     }
   }, []);
 
